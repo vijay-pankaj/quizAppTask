@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { useTheme } from "../Hooks/useTheame";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { API_BASE_URL } from "../config/api";
-import usePagination from "../Hooks/usePagination";
 import useDebounce from "../Hooks/useDebounce";
+import usePagination from "../Hooks/usePagination";
+import { useTheme } from "../Hooks/useTheame";
 
-const QUIZ_URL = `${API_BASE_URL}/quiz`;
-const SETS_URL = `${API_BASE_URL}/sets`;
+const QUIZ_URL = `${API_BASE_URL}/api/client/question`;
+const SETS_URL = `${API_BASE_URL}/api/client/quizzes`;
 
 const emptyForm = {
   question:       "",
@@ -30,7 +30,6 @@ export default function Quiz() {
   const { setId } = useParams();
   const navigate  = useNavigate();
   const { t }     = useTheme();
-
   const [set, setSet]               = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError]           = useState(null);
@@ -53,7 +52,7 @@ export default function Quiz() {
     hasNext,
     fetchData,
     goToPage,
-  } = usePagination(`${QUIZ_URL}/set/${setId}`, { itemsPerPage: 6 });
+  } = usePagination(`${QUIZ_URL}/${setId}`, { itemsPerPage: 6 });
 
   // ── Fetch parent set
   useEffect(() => {
@@ -135,7 +134,7 @@ export default function Quiz() {
       if (editId) {
         await axios.put(`${QUIZ_URL}/${editId}`, payload);
       } else {
-        await axios.post(QUIZ_URL, { ...payload, setId });
+        await axios.post(`${QUIZ_URL}/${setId}`, { ...payload});
       }
       closeModal();
       fetchData({ page: currentPage, search: debouncedSearch });

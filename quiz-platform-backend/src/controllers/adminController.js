@@ -34,7 +34,23 @@ const getAllClient = async(req,res)=>{
     });
   }
 }
+const getClientById = async(req,res)=>{
+  try{
+    console.log(req.params.id)
+    const client = await models.Client.findByPk(req.params.id)
+     res.status(201).json(
+      client
+    );
+  }catch(error){
+     res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
 export default {
   createClient,
-  getAllClient
+  getAllClient,
+  getClientById
 };

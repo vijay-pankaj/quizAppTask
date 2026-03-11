@@ -6,7 +6,7 @@ import useDebounce from "../Hooks/useDebounce";
 import usePagination from "../Hooks/usePagination";
 import { useTheme } from "../Hooks/useTheame";
 
-const SETS_URL       = `${API_BASE_URL}/api/client/quizzes`;
+const SETS_URL       = `${API_BASE_URL}/api/client`;
 const CATEGORIES_URL = `${API_BASE_URL}/api/client`;
 const emptyForm      = { title: "", duration: "", totalMarks: "" };
 
@@ -38,8 +38,7 @@ export default function Set() {
     hasNext,
     fetchData,
     goToPage,
-  } = usePagination(`${SETS_URL}/${categoryId}`, { itemsPerPage: 6 });
-
+  } = usePagination(`${SETS_URL}/quizzes/${categoryId}`, { itemsPerPage: 6 });
   // ── Fetch parent category 
   useEffect(() => {
     const fetchCategory = async () => {
@@ -108,7 +107,9 @@ export default function Set() {
       if (editId) {
         await axios.put(`${SETS_URL}/${editId}`, payload);
       } else {
-        await axios.post(SETS_URL, { ...payload, categoryId });
+        await axios.post(`${SETS_URL}/quiz`,{ ...payload, categoryId },{headers:{
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }});
       }
       closeModal();
       fetchData({ page: currentPage, search: debouncedSearch });
@@ -227,7 +228,7 @@ export default function Set() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {sets.map((set) => (
+            {sets.quizzes.map((set) => (
               <div
                 key={set._id}
                 className={`${t.bgCard} border ${t.border} rounded-2xl p-5 flex flex-col gap-3 shadow-sm hover:shadow-md transition-all`}
@@ -295,7 +296,7 @@ export default function Set() {
                     </button>
                   ) : (
                     <button
-                      onClick={() => navigate(`/sets/${set._id}/quiz`)}
+                      onClick={() => navigate(`/sets/${set.id}/quiz`)}
                       className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${t.badge} ${t.accentText} hover:underline transition-all`}
                     >
                       View Quiz →
