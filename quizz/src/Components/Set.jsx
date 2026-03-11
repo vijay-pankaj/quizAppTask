@@ -14,7 +14,6 @@ export default function Set() {
   const { categoryId } = useParams();
   const navigate       = useNavigate();
   const { t }          = useTheme();
-  const role           = localStorage.getItem("role");
 
   const [category, setCategory]         = useState(null);
   const [submitting, setSubmitting]     = useState(false);
@@ -24,6 +23,8 @@ export default function Set() {
   const [editId, setEditId]             = useState(null);
   const [showModal, setShowModal]       = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+
+  const [roleNum,setRoleNum]=useState(null);
 
   const debouncedSearch = useDebounce(search, 500);
 
@@ -51,6 +52,11 @@ export default function Set() {
     };
     fetchCategory();
   }, [categoryId]);
+//role
+  useEffect(()=>{
+  const role = localStorage.getItem("role");
+  setRoleNum(Number(role));
+},[]);
 
   // ── Fetch sets 
   useEffect(() => {
@@ -171,7 +177,7 @@ export default function Set() {
           </div>
 
           {/* Only admin/client can create sets */}
-          {role !== "student" && (
+          {roleNum !== 3 && (
             <button
               onClick={openCreate}
               className={`${t.accentBg} ${t.accentBgHover} text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all`}
@@ -221,7 +227,7 @@ export default function Set() {
             <p className="text-sm">
               {search
                 ? "Try a different search term"
-                : role === "student"
+                : roleNum === 3
                   ? "No sets available yet"
                   : `Click "+ New Set" to get started`}
             </p>
@@ -240,7 +246,7 @@ export default function Set() {
                   </div>
 
                   {/* Edit/Delete only for non-students */}
-                  {role !== "student" && (
+                  {roleNum !== 3 && (
                     <div className="flex gap-1 shrink-0">
                       <button
                         onClick={() => openEdit(set)}
@@ -287,9 +293,9 @@ export default function Set() {
                   </span>
 
                   {/* Role-based action button */}
-                  {role === "student" ? (
+                  {roleNum === 3 ? (
                     <button
-                      onClick={() => navigate(`/sets/${set._id}/start-test`)}
+                      onClick={() => navigate(`/sets/${set.id}/start-test`)}
                       className={`text-xs font-bold px-3 py-1.5 rounded-full ${t.accentBg} ${t.accentBgHover} text-white shadow-sm transition-all`}
                     >
                       Start Test →

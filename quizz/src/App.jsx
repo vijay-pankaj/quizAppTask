@@ -44,10 +44,8 @@ function App() {
                 <Route path="/sets/:setId/quiz"              element={<Quiz />} />
                 <Route path="/sets/:setId/start-test"        element={<StartTest />} />
                 <Route path="/result/:resultId"              element={<Result />} />
-                <Route path="/admin"              element={<Admin />} />
+                <Route path="/admin"                         element={<Admin />} />
                 <Route path="/StudentDashboard"              element={<StudentDashboard />} />
-
-
               </Routes>
             </main>
             <Footer />

@@ -6,7 +6,7 @@ import { API_BASE_URL } from "../config/api";
 
 const BASE = `${API_BASE_URL}/api`;
 
-// ── Avatar ────────────────────────────────────────────────────
+//Avatar
 const COLORS = ["#0d9488","#0891b2","#7c3aed","#db2777","#d97706","#16a34a","#dc2626","#2563eb"];
 const avatarColor = (name = "") => {
   let h = 0;
@@ -26,7 +26,7 @@ const Avatar = ({ name = "?", size = 36 }) => {
   );
 };
 
-// ── Validation ────────────────────────────────────────────────
+//Validation
 const emptyForm = { company_name: "", name: "", email: "", contact_number: "", password: "" };
 
 const validate = (f, isEdit = false) => {
@@ -45,7 +45,7 @@ const validate = (f, isEdit = false) => {
   return e;
 };
 
-// ── Modal ─────────────────────────────────────────────────────
+//Modal
 function Modal({ open, onClose, title, subtitle, children }) {
   useEffect(() => {
     const fn = e => { if (e.key === "Escape") onClose(); };
@@ -71,7 +71,7 @@ function Modal({ open, onClose, title, subtitle, children }) {
   );
 }
 
-// ── Client Form (shared for Add & Edit) ───────────────────────
+//Add & Edit
 function ClientForm({ initial, onSubmit, onCancel, submitLabel = "Save", loading, isEdit = false }) {
   const [form, setForm] = useState(initial || emptyForm);
   const [errors, setErrors] = useState({});
@@ -137,7 +137,7 @@ function ClientForm({ initial, onSubmit, onCancel, submitLabel = "Save", loading
   );
 }
 
-// ── View Modal 
+//View Modal 
 function ViewModal({ open, onClose, client }) {
   const [showPass, setShowPass] = useState(false);
   useEffect(() => { if (!open) setShowPass(false); }, [open]);
@@ -181,7 +181,7 @@ function ViewModal({ open, onClose, client }) {
   );
 }
 
-// ── Delete Modal 
+//Delete Modal 
 function DeleteModal({ open, onClose, onConfirm, clientName, loading }) {
   return (
     <Modal open={open} onClose={() => !loading && onClose()} title="Delete Client">
@@ -202,7 +202,7 @@ function DeleteModal({ open, onClose, onConfirm, clientName, loading }) {
   );
 }
 
-// ── Skeleton rows while loading
+//loading
 const SkeletonRow = () => (
   <tr>
     {[220, 130, 170, 120, 90, 80].map((w, i) => (
@@ -213,7 +213,7 @@ const SkeletonRow = () => (
   </tr>
 );
 
-// ── Main Page ─────────────────────────────────────────────────
+//Main Page
 export default function AdminPage() {
   const { t } = useTheme();
 
@@ -228,7 +228,7 @@ export default function AdminPage() {
   const [viewClient,   setViewClient]   = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
-  // ── READ ──────────────────────────────────────────────────
+ 
   const fetchClients = useCallback(async () => {
     setLoading(true);
     try {
@@ -246,7 +246,7 @@ export default function AdminPage() {
 
   useEffect(() => { fetchClients(); }, [fetchClients]);
 
-  // ── CREATE ────────────────────────────────────────────────
+  //CREATE
   const handleAdd = async (form) => {
     setSubmitting(true);
     try {
@@ -265,7 +265,7 @@ export default function AdminPage() {
     }
   };
 
-  // ── UPDATE ────────────────────────────────────────────────
+  //UPDATE
   const handleEdit = async (form) => {
     setSubmitting(true);
     try {
@@ -284,7 +284,7 @@ export default function AdminPage() {
     }
   };
 
-  // ── DELETE
+  //DELETE
   const handleDelete = async () => {
     setSubmitting(true);
     try {
@@ -303,7 +303,7 @@ export default function AdminPage() {
     }
   };
 
-  // ── Filter & Sort ─────────────────────────────────────────
+  //Filter & Sort
   const q = search.toLowerCase();
   const filtered = [...clients]
     .filter(c => [c.company_name, c.name, c.email, c.contact_number].some(v => (v || "").toLowerCase().includes(q)))

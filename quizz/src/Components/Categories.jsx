@@ -18,6 +18,7 @@ export default function Categories() {
   const [editId, setEditId]         = useState(null);
   const [showModal, setShowModal]   = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [roleNum,setRoleNum]=useState(null);
   const navigate = useNavigate();
   
   const debouncedSearch = useDebounce(search, 500);
@@ -34,8 +35,6 @@ export default function Categories() {
     goToPage,
   } = usePagination(CATEGORIES_URL, { itemsPerPage: 6 });
   
-  // ── Normalize API response: support both { bundles: [] } and direct array
-  // API returns: { success, data: { totalRecords, totalPages, currentPage, bundles: [] } }
   const categories = Array.isArray(rawData)
   ? rawData
   : rawData?.bundles ?? rawData?.data?.bundles ?? [];
@@ -45,10 +44,16 @@ export default function Categories() {
     fetchData({ page: currentPage, search: debouncedSearch });
   }, [currentPage, debouncedSearch]);
   
-  // ── Reset to page 1 on new search
+  // Reset to page 1 on new search
   useEffect(() => {
     goToPage(1);
   }, [debouncedSearch]);
+
+  //fetch roleNum
+  useEffect(()=>{
+  const role = localStorage.getItem("role");
+  setRoleNum(Number(role));
+},[]);
   
   // ── Modal helpers
   const openCreate = () => {
@@ -58,7 +63,6 @@ export default function Categories() {
   };
   
   const openEdit = (cat) => {
-    // API uses "title" field — map to form's "name" for display
     setForm({
       name: cat.title ?? cat.name ?? "",
       description: cat.description ?? "",
@@ -73,13 +77,12 @@ export default function Categories() {
     setForm(emptyForm);
   };
   
-  // ── Create / Update
+  //Create / Update
   const handleSubmit = async () => {
     if (!form.name.trim()) return;
     setSubmitting(true);
     setError(null);
     try {
-      // Send "title" to match API contract; keep "description" as-is
       const payload = { title: form.name, description: form.description };
       if (editId) {
         await axios.put(`${CATEGORIES_URL}/${editId}`, payload);
@@ -119,7 +122,7 @@ export default function Categories() {
     }
   };
 
-  // ── Helpers to safely read fields regardless of API shape
+ 
   const getCatId   = (cat) => cat.id   ?? cat._id;
   const getCatName = (cat) => cat.title ?? cat.name ?? "";
 
@@ -135,12 +138,12 @@ export default function Categories() {
               {totalItems} {totalItems === 1 ? "category" : "categories"} total
             </p>
           </div>
-          <button
+          {(roleNum == 1 || roleNum == 2) && <button
             onClick={openCreate}
             className={`${t.accentBg} ${t.accentBgHover} text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all`}
           >
             + New Category
-          </button>
+          </button>}
         </div>
 
         {/* Error banner */}
@@ -207,7 +210,7 @@ export default function Categories() {
                   >
                     {getCatName(cat).charAt(0).toUpperCase()}
                   </div>
-                  <div className="flex gap-1 shrink-0">
+                  {(roleNum == 1 || roleNum == 2) && <div className="flex gap-1 shrink-0">
                     <button
                       onClick={(e) => { e.stopPropagation(); openEdit(cat); }}
                       className={`w-8 h-8 rounded-lg border ${t.border} ${t.bgCardHover} ${t.textSecondary} flex items-center justify-center text-sm transition-all`}
@@ -222,7 +225,7 @@ export default function Categories() {
                     >
                       🗑️
                     </button>
-                  </div>
+                  </div>}
                 </div>
 
                 {/* Card content */}
