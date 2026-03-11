@@ -11,4 +11,9 @@ router.post(
   roleMiddleware(1),
   adminController.createClient
 );
+router.get(
+  '/allclients',
+  authMiddleware,
+  roleMiddleware(1),
+  adminController.getAllClient)
 export default router;

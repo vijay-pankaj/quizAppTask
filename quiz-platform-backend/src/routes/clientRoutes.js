@@ -14,8 +14,6 @@ router.post(
 
 router.get(
   "/bundles",
-  authMiddleware,
-  roleMiddleware(2),
   bundleController.getBundles
 );
 
@@ -30,8 +28,8 @@ router.post(
 
 router.get(
   "/quizzes/:bundleId",
-  authMiddleware,
-  roleMiddleware(2),
+  // authMiddleware,
+  // roleMiddleware(2),
   quizController.getQuizzes
 );
 
@@ -46,8 +44,8 @@ router.post(
 
 router.get(
   "/questions/:quizId",
-  authMiddleware,
-  roleMiddleware(2),
+  // authMiddleware,
+  // roleMiddleware(2),
   questionController.getQuestions
 );
 export default router;

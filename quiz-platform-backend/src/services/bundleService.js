@@ -11,13 +11,13 @@ const createBundle = async (data, clientId) => {
   return bundle;
 };
 
-const getBundles = async (query, clientId) => {
+const getBundles = async (query) => {
 
   const page = parseInt(query.page) || 1;
   const limit = parseInt(query.limit) || 10;
   const search = query.search || "";
 
-  const result = await bundleRepo.getBundles(clientId, page, limit, search);
+  const result = await bundleRepo.getBundles(page, limit, search);
 
   return {
     totalRecords: result.count,

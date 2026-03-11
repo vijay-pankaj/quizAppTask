@@ -6,13 +6,13 @@ const router = express.Router();
 
 router.post("/register", studentController.registerStudent);
 router.post(
-  "/submit-quiz",
+  "/submit-quiz/:id",
   authMiddleware,
   roleMiddleware(3),
   studentController.submitQuiz
 );
 router.post(
-  "/start-quiz",
+  "/start-quiz/:id",
   authMiddleware,
   roleMiddleware(3),
   studentController.startQuiz
