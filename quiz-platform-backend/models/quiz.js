@@ -27,7 +27,10 @@ const Quiz = sequelize.define(
     total_marks: {
       type: DataTypes.INTEGER,
     },
-
+  is_deleted: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE,
     deletedAt: DataTypes.DATE,

@@ -279,10 +279,19 @@ const getResult = async (attemptId) => {
 
 };
 
+const updateStudent = async (id, data) => {
+  return await studentRepo.updateStudent(id, data);
+};
+
+const deleteStudent = async (id) => {
+  return await studentRepo.deleteStudent(id);
+};
 
 export default {
   registerStudent,
   startQuiz,
   submitQuiz,
-  getResult
+  getResult,
+  updateStudent,
+  deleteStudent
 };

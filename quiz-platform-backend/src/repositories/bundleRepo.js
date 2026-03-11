@@ -11,7 +11,7 @@ const getBundles = async (page = 1, limit = 10, search = null) => {
 
   const offset = (page - 1) * limit;
 
-  const where = {};
+  const where = {is_deleted:false};
 
   if (search) {
 
@@ -31,8 +31,42 @@ const getBundles = async (page = 1, limit = 10, search = null) => {
   return result;
 
 };
+const updateBundle = async (id, data) => {
+
+  const bundle = await models.Bundle.findOne({
+    where: {
+      id,
+      is_deleted: false
+    }
+  });
+
+  if (!bundle) return null;
+
+  await bundle.update(data);
+
+  return bundle;
+};
+const deleteBundle = async (id) => {
+
+  const bundle = await models.Bundle.findOne({
+    where: {
+      id,
+      is_deleted: false
+    }
+  });
+
+  if (!bundle) return null;
+
+  await bundle.update({
+    is_deleted: true
+  });
+
+  return bundle;
+};
 
 export default {
   createBundle,
-  getBundles
+  getBundles,
+  updateBundle,
+  deleteBundle
 };

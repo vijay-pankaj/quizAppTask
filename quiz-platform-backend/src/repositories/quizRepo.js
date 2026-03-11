@@ -12,7 +12,8 @@ const getQuizzes = async (bundleId, page = 1, limit = 10, search = null) => {
   const offset = (page - 1) * limit;
 
   const where = {
-    bundle_id: bundleId
+    bundle_id: bundleId,
+    is_deleted:false
   };
 
   if (search) {
@@ -33,8 +34,42 @@ const getQuizzes = async (bundleId, page = 1, limit = 10, search = null) => {
   return result;
 
 };
+const updateQuiz = async (id, data) => {
+
+  const quiz = await models.Quiz.findOne({
+    where: {
+      id,
+      is_deleted: false
+    }
+  });
+
+  if (!quiz) return null;
+
+  await quiz.update(data);
+
+  return quiz;
+};
+const deleteQuiz = async (id) => {
+console.log("firstid",id)
+  const quiz = await models.Quiz.findOne({
+    where: {
+      id,
+      is_deleted: false
+    }
+  });
+console.log(quiz)
+  if (!quiz) return null;
+
+  await quiz.update({
+    is_deleted: true
+  });
+
+  return quiz;
+};
 
 export default {
   createQuiz,
-  getQuizzes
+  getQuizzes,
+  updateQuiz,
+  deleteQuiz
 };

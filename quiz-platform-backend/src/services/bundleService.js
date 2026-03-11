@@ -48,7 +48,14 @@ const getBundles = async (query) => {
 
 };
 
+const updateBundle = async (id, data) => {
+  return await bundleRepo.updateBundle(id, data);
+};
+const deleteBundle = async (id) => {
+  return await bundleRepo.deleteBundle(id);
+};
 export default {
   createBundle,
-  getBundles
+  getBundles,updateBundle,
+  deleteBundle
 };

@@ -48,8 +48,14 @@ const getQuizzes = async (query, bundleId) => {
   };
 
 };
-
+const updateQuiz = async (id, data) => {
+  return await quizRepo.updateQuiz(id, data);
+};
+const deleteQuiz = async (id) => {
+  return await quizRepo.deleteQuiz(id);
+};
 export default {
   createQuiz,
-  getQuizzes
+  getQuizzes,
+  updateQuiz,deleteQuiz
 };

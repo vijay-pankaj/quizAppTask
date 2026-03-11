@@ -23,7 +23,10 @@ const Bundle = sequelize.define(
     description: {
       type: DataTypes.TEXT,
     },
-
+    is_deleted: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE,
     deletedAt: DataTypes.DATE,
@@ -32,7 +35,7 @@ const Bundle = sequelize.define(
     tableName: "bundles",
     timestamps: true,
     paranoid: true,
-  }
+  },
 );
 
 export default Bundle;
