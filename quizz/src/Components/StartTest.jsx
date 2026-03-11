@@ -4,13 +4,14 @@ import axios from "axios";
 import { useTheme } from "../Hooks/useTheame";
 import { API_BASE_URL } from "../config/api";
 
-const QUIZ_URL    = `${API_BASE_URL}/quiz`;
+const QUIZ_URL    = `${API_BASE_URL}/api/student/start-quiz`;
 const SETS_URL    = `${API_BASE_URL}/sets`;
 const RESULTS_URL = `${API_BASE_URL}/results`;
 const OPTIONS     = ["A", "B", "C", "D"];
 
 export default function StartTest() {
   const { setId }  = useParams();
+  console.log("setId",setId);
   const navigate   = useNavigate();
   const { t }      = useTheme();
 
@@ -30,8 +31,8 @@ export default function StartTest() {
       setLoading(true);
       try {
         const [setRes, qRes] = await Promise.all([
-          axios.get(`${SETS_URL}/${setId}`),
-          axios.get(`${QUIZ_URL}/set/${setId}/all`),
+          // axios.get(`${SETS_URL}/${setId}`),
+          axios.get(`${QUIZ_URL}/${setId}`),
         ]);
         setSet(setRes.data);
         setQuestions(qRes.data?.data ?? qRes.data ?? []);

@@ -33,7 +33,7 @@ const Home = () => {
         </p>
         <div className="flex gap-3 justify-center">
           <Link
-            to="/StudentDashboard"
+            to="/categories"
             className={`${t.accentBg} ${t.accentBgHover} text-white px-7 py-3 rounded-xl font-bold text-sm shadow-md transition-all`}
           >
             Start Quiz →
