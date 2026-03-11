@@ -3,9 +3,9 @@ import quizService from "../services/quizService.js";
 const createQuiz = async (req, res) => {
 
   try {
-    console.log(req.body.bundle_id)
+    console.log(req.body.categoryId)
     
-    const bundleId = await models.Bundle.findOne({where:{id:req.body.bundle_id}})
+    const bundleId = await models.Bundle.findOne({where:{id:req.body.categoryId}})
 
     const quiz = await quizService.createQuiz(req.body,bundleId.id);
 

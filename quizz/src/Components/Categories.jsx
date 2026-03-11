@@ -6,12 +6,11 @@ import useDebounce from "../Hooks/useDebounce";
 import usePagination from "../Hooks/usePagination";
 import { useTheme } from "../Hooks/useTheame";
 
-const CATEGORIES_URL = `${API_BASE_URL}/api/client/bundles`;
+const CATEGORIES_URL = `${API_BASE_URL}/api/client/bundle`;
 const emptyForm = { name: "", description: "" };
-
 export default function Categories() {
   const { t } = useTheme();
-
+  
   const [submitting, setSubmitting] = useState(false);
   const [error, setError]           = useState(null);
   const [search, setSearch]         = useState("");
@@ -20,7 +19,7 @@ export default function Categories() {
   const [showModal, setShowModal]   = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const navigate = useNavigate();
-
+  
   const debouncedSearch = useDebounce(search, 500);
   const {
     data: rawData,
@@ -34,30 +33,30 @@ export default function Categories() {
     fetchData,
     goToPage,
   } = usePagination(CATEGORIES_URL, { itemsPerPage: 6 });
-
+  
   // ── Normalize API response: support both { bundles: [] } and direct array
   // API returns: { success, data: { totalRecords, totalPages, currentPage, bundles: [] } }
   const categories = Array.isArray(rawData)
-    ? rawData
-    : rawData?.bundles ?? rawData?.data?.bundles ?? [];
-
+  ? rawData
+  : rawData?.bundles ?? rawData?.data?.bundles ?? [];
+  
   // ── Fetch on page or search change
   useEffect(() => {
     fetchData({ page: currentPage, search: debouncedSearch });
   }, [currentPage, debouncedSearch]);
-
+  
   // ── Reset to page 1 on new search
   useEffect(() => {
     goToPage(1);
   }, [debouncedSearch]);
-
+  
   // ── Modal helpers
   const openCreate = () => {
     setForm(emptyForm);
     setEditId(null);
     setShowModal(true);
   };
-
+  
   const openEdit = (cat) => {
     // API uses "title" field — map to form's "name" for display
     setForm({
@@ -73,7 +72,7 @@ export default function Categories() {
     setEditId(null);
     setForm(emptyForm);
   };
-
+  
   // ── Create / Update
   const handleSubmit = async () => {
     if (!form.name.trim()) return;
@@ -85,7 +84,10 @@ export default function Categories() {
       if (editId) {
         await axios.put(`${CATEGORIES_URL}/${editId}`, payload);
       } else {
-        await axios.post(CATEGORIES_URL, payload);
+        const token = localStorage.getItem("token")
+        await axios.post(CATEGORIES_URL, payload,{headers:{
+          Authorization:`bearer ${token}`
+        }});
       }
       closeModal();
       fetchData({ page: currentPage, search: debouncedSearch });

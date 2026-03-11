@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import { useTheme } from "../Hooks/useTheame";
 import { API_BASE_URL } from "../config/api";
-import { toast } from "react-toastify";
 
 const BASE = `${API_BASE_URL}/api`;
 
@@ -233,7 +233,7 @@ export default function AdminPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get(BASE, {
+      const res = await axios.get(`${BASE}/admin/allclients`, {
         headers: { authorization: `Bearer ${token}` }
       });
       setClients(res.data);

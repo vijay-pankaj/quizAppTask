@@ -13,7 +13,9 @@ router.post(
 );
 
 router.get(
-  "/bundles",
+  "/bundle",
+   authMiddleware,
+  // roleMiddleware(2,3),
   bundleController.getBundles
 );
 
@@ -36,14 +38,14 @@ router.get(
 import questionController from "../controllers/questionController.js";
 
 router.post(
-  "/question",
-  authMiddleware,
-  roleMiddleware(2),
+  "/question/:id",
+  // authMiddleware,
+  // roleMiddleware(2),
   questionController.createQuestion
 );
 
 router.get(
-  "/questions/:quizId",
+  "/question/:quizId",
   // authMiddleware,
   // roleMiddleware(2),
   questionController.getQuestions

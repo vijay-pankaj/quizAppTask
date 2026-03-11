@@ -23,7 +23,7 @@ const usePagination = (url, { itemsPerPage = 6 } = {}) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.get(url, {
+      const res = await axios.get(url, {headers:{Authorization: `Bearer ${localStorage.getItem('token')}`}},{
         params: {
           page,
           limit,

@@ -4,8 +4,8 @@ const createQuestion = async (req, res) => {
 
   try {
 
-    const quizId = req.body.quiz_id;
-
+    const quizId = req.params.id;
+    console.log(quizId)
     const quiz = await models.Quiz.findByPk(quizId);
 
     if (!quiz) {
