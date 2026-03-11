@@ -1,15 +1,35 @@
+import sequelize from "../config/sequelizeConfig.js";
 import bundleRepo from "../repositories/bundleRepo.js";
 
 const createBundle = async (data, clientId) => {
 
-  const bundle = await bundleRepo.createBundle({
-    client_id: clientId,
-    title: data.title,
-    description: data.description,
-  });
+  const transaction = await sequelize.transaction();
 
-  return bundle;
+  try {
+
+    const bundle = await bundleRepo.createBundle(
+      {
+        client_id: clientId,
+        title: data.title,
+        description: data.description
+      },
+      transaction
+    );
+
+    await transaction.commit();
+
+    return bundle;
+
+  } catch (error) {
+
+    await transaction.rollback();
+    throw error;
+
+  }
+
 };
+
+
 
 const getBundles = async (query) => {
 
@@ -23,11 +43,12 @@ const getBundles = async (query) => {
     totalRecords: result.count,
     totalPages: Math.ceil(result.count / limit),
     currentPage: page,
-    bundles: result.rows,
+    bundles: result.rows
   };
+
 };
 
 export default {
   createBundle,
-  getBundles,
+  getBundles
 };

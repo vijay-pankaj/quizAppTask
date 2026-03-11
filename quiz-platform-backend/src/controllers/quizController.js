@@ -1,29 +1,39 @@
 import models from "../../models/index.js";
 import quizService from "../services/quizService.js";
+
 const createQuiz = async (req, res) => {
 
   try {
-    console.log(req.body.categoryId)
-    
-    const bundleId = await models.Bundle.findOne({where:{id:req.body.categoryId}})
 
-    const quiz = await quizService.createQuiz(req.body,bundleId.id);
+    const bundle = await models.Bundle.findByPk(req.body.categoryId);
 
-    res.status(201).json({
+    if (!bundle) {
+
+      return res.status(404).json({
+        success: false,
+        message: "Bundle not found"
+      });
+
+    }
+
+    const quiz = await quizService.createQuiz(req.body, bundle.id);
+
+    return res.status(201).json({
       success: true,
-      data: quiz,
+      data: quiz
     });
 
   } catch (error) {
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: error.message,
+      message: error.message
     });
 
   }
 
 };
+
 
 const getQuizzes = async (req, res) => {
 
@@ -33,16 +43,16 @@ const getQuizzes = async (req, res) => {
 
     const quizzes = await quizService.getQuizzes(req.query, bundleId);
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      data: quizzes,
+      data: quizzes
     });
 
   } catch (error) {
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: error.message,
+      message: error.message
     });
 
   }
@@ -51,5 +61,5 @@ const getQuizzes = async (req, res) => {
 
 export default {
   createQuiz,
-  getQuizzes,
+  getQuizzes
 };

@@ -143,7 +143,7 @@ export default function Set() {
       setSubmitting(false);
     }
   };
-
+console.log(sets.quizzes)
   return (
     <div className={`min-h-screen ${t.bg} transition-colors duration-300 p-6`}>
       <div className="max-w-5xl mx-auto">
@@ -236,7 +236,7 @@ export default function Set() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {sets.quizzes.map((set) => (
               <div
-                key={set._id}
+                key={set.id}
                 className={`${t.bgCard} border ${t.border} rounded-2xl p-5 flex flex-col gap-3 shadow-sm hover:shadow-md transition-all`}
               >
                 {/* Card top */}

@@ -1,34 +1,38 @@
 import { Op } from "sequelize";
-import Bundle from "../../models/bundle.js";
+import models from "../../models/index.js";
 
-const createBundle = async (data) => {
-  return await Bundle.create(data);
+const createBundle = async (data, transaction = null) => {
+
+  return await models.Bundle.create(data, { transaction });
+
 };
 
-const getBundles = async ( page, limit, search) => {
+const getBundles = async (page = 1, limit = 10, search = null) => {
 
   const offset = (page - 1) * limit;
 
-  const where = {
-  };
+  const where = {};
 
   if (search) {
+
     where.title = {
-      [Op.like]: `%${search}%`,
+      [Op.like]: `%${search}%`
     };
+
   }
 
-  const result = await Bundle.findAndCountAll({
+  const result = await models.Bundle.findAndCountAll({
     where,
     limit,
     offset,
-    order: [["createdAt", "DESC"]],
+    order: [["createdAt", "DESC"]]
   });
 
   return result;
+
 };
 
 export default {
   createBundle,
-  getBundles,
+  getBundles
 };

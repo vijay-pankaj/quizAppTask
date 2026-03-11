@@ -1,27 +1,28 @@
-import authService from "../services/authService.js"
+import authService from "../services/authService.js";
 
 const login = async (req, res) => {
 
-    try {
+  try {
 
-        const result = await authService.login(req.body)
+    const result = await authService.login(req.body);
 
-        res.status(200).json({
-            success: true,
-            token: result.token,
-            user: result.user
-        })
+    return res.status(200).json({
+      success: true,
+      token: result.token,
+      user: result.user
+    });
 
-    } catch (error) {
+  } catch (error) {
 
-        res.status(400).json({
-            success: false,
-            message: error.message
-        })
+    return res.status(400).json({
+      success: false,
+      message: error.message
+    });
 
-    }
-}
+  }
+
+};
 
 export default {
-    login
-}
+  login
+};

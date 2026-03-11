@@ -1,16 +1,36 @@
+import sequelize from "../config/sequelizeConfig.js";
 import quizRepo from "../repositories/quizRepo.js";
 
-const createQuiz = async (data,id) => {
+const createQuiz = async (data, bundleId) => {
 
-  const quiz = await quizRepo.createQuiz({
-    bundle_id: id,
-    title: data.title,
-    duration: data.duration,
-    total_marks: data.total_marks,
-  });
+  const transaction = await sequelize.transaction();
 
-  return quiz;
+  try {
+
+    const quiz = await quizRepo.createQuiz(
+      {
+        bundle_id: bundleId,
+        title: data.title,
+        duration: data.duration,
+        total_marks: data.total_marks
+      },
+      transaction
+    );
+
+    await transaction.commit();
+
+    return quiz;
+
+  } catch (error) {
+
+    await transaction.rollback();
+    throw error;
+
+  }
+
 };
+
+
 
 const getQuizzes = async (query, bundleId) => {
 
@@ -24,11 +44,12 @@ const getQuizzes = async (query, bundleId) => {
     totalRecords: result.count,
     totalPages: Math.ceil(result.count / limit),
     currentPage: page,
-    quizzes: result.rows,
+    quizzes: result.rows
   };
+
 };
 
 export default {
   createQuiz,
-  getQuizzes,
+  getQuizzes
 };
