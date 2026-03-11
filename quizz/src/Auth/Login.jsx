@@ -32,9 +32,12 @@ const Login = () => {
       localStorage.setItem("userId", res.data.user.id);
 
       toast.success("Login successful! Welcome back 👋");
-      if(res.data.user.role_id==1 ||res.data.user.role_id==2){
+      if(res.data.user.role_id==1){
         navigate("/admin")
-      }else {
+      }else if(res.data.user.role_id==2){
+        navigate('/categories')
+      }
+      else {
         navigate('/')
       }
     } catch (err) {
