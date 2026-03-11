@@ -37,14 +37,16 @@ function App() {
             <main className="flex-1">
               <Routes>
                 <Route path="/"                              element={<Home />} />
-                <Route path="/login"                         element={<Login />} />
-                <Route path="/signup"                        element={<Signup />} />
-                <Route path="/categories"                    element={<Categories />} />
-                <Route path="/categories/:categoryId/sets"   element={<Set />} />
-                <Route path="/sets/:setId/quiz"              element={<Quiz />} />
-                <Route path="/sets/:setId/start-test"        element={<StartTest />} />
-                <Route path="/result/:resultId"              element={<Result />} />
-                <Route path="/admin"                         element={<Admin />} />
+
+                <Route path="/login"                         element={<AuthProtected><Login /></AuthProtected>} />
+                <Route path="/signup"                        element={<AuthProtected><Signup /></AuthProtected> } />
+
+                <Route path="/categories"                    element={<Protected><Categories /></Protected>} />
+                <Route path="/categories/:categoryId/sets"   element={<Protected> <Set /></Protected>} />
+                <Route path="/sets/:setId/quiz"              element={<Protected><Quiz /></Protected>} />
+                <Route path="/sets/:setId/start-test"        element={<Protected><StartTest /></Protected>} />
+                <Route path="/result/:resultId"              element={<Protected><Result /></Protected>} />
+                <Route path="/admin"                         element={<Protected><Admin /></Protected>} />
                 <Route path="/StudentDashboard"              element={<StudentDashboard />} />
               </Routes>
             </main>
@@ -53,14 +55,14 @@ function App() {
 
         </div>
         <ToastContainer
-  position="top-right"
-  autoClose={3000}
-  hideProgressBar={false}
-  newestOnTop
-  closeOnClick
-  pauseOnHover
-  theme="colored"
-/>
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          pauseOnHover
+          theme="colored"
+          />
       </BrowserRouter>
     </ThemeProvider>
   );
