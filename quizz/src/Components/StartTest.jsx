@@ -11,6 +11,7 @@ const OPTIONS     = ["A", "B", "C", "D"];
 
 export default function StartTest() {
   const { setId }  = useParams();
+  console.log("setId",setId);
   const navigate   = useNavigate();
   const { t }      = useTheme();
 
