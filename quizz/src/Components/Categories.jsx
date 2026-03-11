@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useTheme } from "../Hooks/useTheame";
-import { API_BASE_URL } from "../config/api";
-import usePagination from "../Hooks/usePagination";
-import useDebounce from "../Hooks/useDebounce";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../config/api";
+import useDebounce from "../Hooks/useDebounce";
+import usePagination from "../Hooks/usePagination";
+import { useTheme } from "../Hooks/useTheame";
 
-const CATEGORIES_URL = `${API_BASE_URL}/categories`;
+const CATEGORIES_URL = `${API_BASE_URL}/api/client/bundles`;
 const emptyForm = { name: "", description: "" };
 
 export default function Categories() {
@@ -22,109 +22,70 @@ export default function Categories() {
   const navigate = useNavigate();
 
   const debouncedSearch = useDebounce(search, 500);
-  // const {
-  //   data: categories,
-  //   loading,
-  //   currentPage,
-  //   totalPages,
-  //   totalItems,
-  //   pageNumbers,
-  //   hasPrev,
-  //   hasNext,
-  //   fetchData,
-  //   goToPage,
-  // } = usePagination(CATEGORIES_URL, { itemsPerPage: 6 });
+  const {
+    data: rawData,
+    loading,
+    currentPage,
+    totalPages,
+    totalItems,
+    pageNumbers,
+    hasPrev,
+    hasNext,
+    fetchData,
+    goToPage,
+  } = usePagination(CATEGORIES_URL, { itemsPerPage: 6 });
 
-  // ── Fetch on page or search change 
-  // useEffect(() => {
-  //   fetchData({ page: currentPage, search: debouncedSearch });
-  // }, [currentPage, debouncedSearch]);
+  // ── Normalize API response: support both { bundles: [] } and direct array
+  // API returns: { success, data: { totalRecords, totalPages, currentPage, bundles: [] } }
+  const categories = Array.isArray(rawData)
+    ? rawData
+    : rawData?.bundles ?? rawData?.data?.bundles ?? [];
 
-  // // ── Reset to page 1 on new search 
-  // useEffect(() => {
-  //   goToPage(1);
-  // }, [debouncedSearch]);
+  // ── Fetch on page or search change
+  useEffect(() => {
+    fetchData({ page: currentPage, search: debouncedSearch });
+  }, [currentPage, debouncedSearch]);
 
+  // ── Reset to page 1 on new search
+  useEffect(() => {
+    goToPage(1);
+  }, [debouncedSearch]);
 
-  const dummyCategories = [
-    {
-      _id: "1",
-      name: "SSC CGL",
-      description: "Staff Selection Commission Combined Graduate Level",
-      createdAt: "2024-01-10"
-    },
-    {
-      _id: "2",
-      name: "SSC CHSL",
-      description: "Combined Higher Secondary Level",
-      createdAt: "2024-02-15"
-    },
-    {
-      _id: "3",
-      name: "GATE",
-      description: "Graduate Aptitude Test in Engineering",
-      createdAt: "2024-03-05"
-    },
-    {
-      _id: "4",
-      name: "TECH",
-      description: "Programming and technical questions",
-      createdAt: "2024-03-20"
-    },
-    {
-      _id: "5",
-      name: "UPSC",
-      description: "Union Public Service Commission exam",
-      createdAt: "2024-04-10"
-    },
-    {
-      _id: "6",
-      name: "BANK",
-      description: "Banking exam preparation",
-      createdAt: "2024-04-18"
-    },
-    {
-      _id: "7",
-      name: "RAILWAY",
-      description: "Railway recruitment exams",
-      createdAt: "2024-05-01"
-    },
-    {
-      _id: "8",
-      name: "DEFENCE",
-      description: "NDA, CDS and defence exams",
-      createdAt: "2024-05-12"
-    }
-  ];
- 
-  const categories = dummyCategories;
-const loading = false;
+  // ── Modal helpers
+  const openCreate = () => {
+    setForm(emptyForm);
+    setEditId(null);
+    setShowModal(true);
+  };
 
-const currentPage = 1;
-const totalPages = 1;
-const totalItems = categories.length;
-const pageNumbers = [1];
-const hasPrev = false;
-const hasNext = false;
+  const openEdit = (cat) => {
+    // API uses "title" field — map to form's "name" for display
+    setForm({
+      name: cat.title ?? cat.name ?? "",
+      description: cat.description ?? "",
+    });
+    setEditId(cat.id ?? cat._id);
+    setShowModal(true);
+  };
 
-const fetchData = () => {};
-const goToPage = () => {};
+  const closeModal = () => {
+    setShowModal(false);
+    setEditId(null);
+    setForm(emptyForm);
+  };
 
-  // ── Modal helpers 
-  const openCreate = () => { setForm(emptyForm); setEditId(null); setShowModal(true); };
-  const openEdit   = (cat) => { setForm({ name: cat.name, description: cat.description }); setEditId(cat._id); setShowModal(true); };
-  const closeModal = () => { setShowModal(false); setEditId(null); setForm(emptyForm); };
-
-  // ── Create / Update 
+  // ── Create / Update
   const handleSubmit = async () => {
     if (!form.name.trim()) return;
     setSubmitting(true);
     setError(null);
     try {
+      // Send "title" to match API contract; keep "description" as-is
+      const payload = { title: form.name, description: form.description };
       if (editId) {
-        await axios.put(`${CATEGORIES_URL}/${editId}`, form);
+        await axios.put(`${CATEGORIES_URL}/${editId}`, payload);
       } else {
-        await axios.post(CATEGORIES_URL, form);
+        await axios.post(CATEGORIES_URL, payload);
       }
       closeModal();
       fetchData({ page: currentPage, search: debouncedSearch });
@@ -140,11 +101,13 @@ const goToPage = () => {};
     setSubmitting(true);
     setError(null);
     try {
-      await axios.delete(`${CATEGORIES_URL}/${deleteTarget._id}`);
+      const targetId = deleteTarget.id ?? deleteTarget._id;
+      await axios.delete(`${CATEGORIES_URL}/${targetId}`);
       setDeleteTarget(null);
-      const targetPage = categories.length === 1 && currentPage > 1
-        ? currentPage - 1
-        : currentPage;
+      const targetPage =
+        categories.length === 1 && currentPage > 1
+          ? currentPage - 1
+          : currentPage;
       goToPage(targetPage);
       fetchData({ page: targetPage, search: debouncedSearch });
     } catch (err) {
@@ -153,6 +116,10 @@ const goToPage = () => {};
       setSubmitting(false);
     }
   };
+
+  // ── Helpers to safely read fields regardless of API shape
+  const getCatId   = (cat) => cat.id   ?? cat._id;
+  const getCatName = (cat) => cat.title ?? cat.name ?? "";
 
   return (
     <div className={`min-h-screen ${t.bg} transition-colors duration-300 p-6`}>
@@ -178,7 +145,12 @@ const goToPage = () => {};
         {error && (
           <div className="mb-5 px-4 py-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 text-sm font-medium flex items-center justify-between">
             <span>⚠️ {error}</span>
-            <button onClick={() => setError(null)} className="text-rose-400 hover:text-rose-600 font-bold">✕</button>
+            <button
+              onClick={() => setError(null)}
+              className="text-rose-400 hover:text-rose-600 font-bold"
+            >
+              ✕
+            </button>
           </div>
         )}
 
@@ -192,7 +164,9 @@ const goToPage = () => {};
           />
           {search !== debouncedSearch && (
             <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <div className={`w-4 h-4 border-2 ${t.accentBorder} border-t-transparent rounded-full animate-spin`} />
+              <div
+                className={`w-4 h-4 border-2 ${t.accentBorder} border-t-transparent rounded-full animate-spin`}
+              />
             </div>
           )}
         </div>
@@ -200,39 +174,47 @@ const goToPage = () => {};
         {/* Grid */}
         {loading ? (
           <div className="flex items-center justify-center py-24">
-            <div className={`w-8 h-8 border-4 ${t.accentBorder} border-t-transparent rounded-full animate-spin`} />
+            <div
+              className={`w-8 h-8 border-4 ${t.accentBorder} border-t-transparent rounded-full animate-spin`}
+            />
           </div>
         ) : categories.length === 0 ? (
-          <div className={`flex flex-col items-center justify-center py-24 gap-3 ${t.textMuted}`}>
+          <div
+            className={`flex flex-col items-center justify-center py-24 gap-3 ${t.textMuted}`}
+          >
             <span className="text-5xl">🗂️</span>
             <p className="font-semibold text-lg">No categories found</p>
             <p className="text-sm">
-              {search ? "Try a different search term" : `Click "+ New Category" to get started`}
+              {search
+                ? "Try a different search term"
+                : `Click "+ New Category" to get started`}
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {categories.map((cat) => (
               <div
-                key={cat._id}
-                onClick={() => navigate(`/categories/${cat._id}/sets`)}
+                key={getCatId(cat)}
+                onClick={() => navigate(`/categories/${getCatId(cat)}/sets`)}
                 className={`${t.bgCard} border ${t.border} cursor-pointer rounded-2xl p-5 flex flex-col gap-3 shadow-sm hover:shadow-md transition-all`}
               >
                 {/* Card top */}
                 <div className="flex items-start justify-between gap-2">
-                  <div className={`w-10 h-10 rounded-xl ${t.accentLight} ${t.accentText} flex items-center justify-center text-lg font-black shrink-0`}>
-                    {cat.name.charAt(0).toUpperCase()}
+                  <div
+                    className={`w-10 h-10 rounded-xl ${t.accentLight} ${t.accentText} flex items-center justify-center text-lg font-black shrink-0`}
+                  >
+                    {getCatName(cat).charAt(0).toUpperCase()}
                   </div>
                   <div className="flex gap-1 shrink-0">
                     <button
-                      onClick={() => openEdit(cat)}
+                      onClick={(e) => { e.stopPropagation(); openEdit(cat); }}
                       className={`w-8 h-8 rounded-lg border ${t.border} ${t.bgCardHover} ${t.textSecondary} flex items-center justify-center text-sm transition-all`}
                       title="Edit"
                     >
                       ✏️
                     </button>
                     <button
-                      onClick={() => setDeleteTarget(cat)}
+                      onClick={(e) => { e.stopPropagation(); setDeleteTarget(cat); }}
                       className="w-8 h-8 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-500 flex items-center justify-center text-sm transition-all"
                       title="Delete"
                     >
@@ -243,20 +225,30 @@ const goToPage = () => {};
 
                 {/* Card content */}
                 <div>
-                  <h3 className={`font-bold text-base ${t.text} leading-tight`}>{cat.name}</h3>
-                  <p className={`text-sm ${t.textMuted} mt-1 line-clamp-2 leading-relaxed`}>
+                  <h3 className={`font-bold text-base ${t.text} leading-tight`}>
+                    {getCatName(cat)}
+                  </h3>
+                  <p
+                    className={`text-sm ${t.textMuted} mt-1 line-clamp-2 leading-relaxed`}
+                  >
                     {cat.description || "No description provided."}
                   </p>
                 </div>
 
                 {/* Card footer */}
-                <div className={`flex items-center justify-between pt-2 border-t ${t.borderSubtle}`}>
+                <div
+                  className={`flex items-center justify-between pt-2 border-t ${t.borderSubtle}`}
+                >
                   <span className={`text-xs ${t.textMuted}`}>
                     {new Date(cat.createdAt).toLocaleDateString("en-US", {
-                      month: "short", day: "numeric", year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
                     })}
                   </span>
-                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${t.badge}`}>
+                  <span
+                    className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${t.badge}`}
+                  >
                     Active
                   </span>
                 </div>
@@ -278,16 +270,19 @@ const goToPage = () => {};
 
             {pageNumbers.map((p, i) =>
               p === "..." ? (
-                <span key={`dot-${i}`} className={`px-2 text-sm ${t.textMuted}`}>…</span>
+                <span key={`dot-${i}`} className={`px-2 text-sm ${t.textMuted}`}>
+                  …
+                </span>
               ) : (
                 <button
                   key={p}
                   onClick={() => goToPage(p)}
                   disabled={loading}
                   className={`w-9 h-9 rounded-xl text-sm font-bold border transition-all
-                    ${currentPage === p
-                      ? `${t.accentBg} text-white border-transparent shadow-md`
-                      : `${t.bgCard} ${t.border} ${t.textSecondary} ${t.bgCardHover}`
+                    ${
+                      currentPage === p
+                        ? `${t.accentBg} text-white border-transparent shadow-md`
+                        : `${t.bgCard} ${t.border} ${t.textSecondary} ${t.bgCardHover}`
                     }`}
                 >
                   {p}
@@ -315,18 +310,27 @@ const goToPage = () => {};
       {/* Create / Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={closeModal} />
-          <div className={`relative w-full max-w-md ${t.bgCard} border ${t.border} rounded-3xl p-7 shadow-2xl z-10`}>
+          <div
+            className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
+            onClick={closeModal}
+          />
+          <div
+            className={`relative w-full max-w-md ${t.bgCard} border ${t.border} rounded-3xl p-7 shadow-2xl z-10`}
+          >
             <h2 className={`text-xl font-black ${t.text} mb-1`}>
               {editId ? "Edit Category" : "New Category"}
             </h2>
             <p className={`text-sm ${t.textMuted} mb-6`}>
-              {editId ? "Update the category details below." : "Fill in the details to create a new category."}
+              {editId
+                ? "Update the category details below."
+                : "Fill in the details to create a new category."}
             </p>
 
             <div className="flex flex-col gap-5">
               <div>
-                <label className={`text-xs font-bold uppercase tracking-widest ${t.textMuted} mb-1.5 block`}>
+                <label
+                  className={`text-xs font-bold uppercase tracking-widest ${t.textMuted} mb-1.5 block`}
+                >
                   Name <span className="text-rose-400">*</span>
                 </label>
                 <input
@@ -337,12 +341,16 @@ const goToPage = () => {};
                 />
               </div>
               <div>
-                <label className={`text-xs font-bold uppercase tracking-widest ${t.textMuted} mb-1.5 block`}>
+                <label
+                  className={`text-xs font-bold uppercase tracking-widest ${t.textMuted} mb-1.5 block`}
+                >
                   Description
                 </label>
                 <textarea
                   value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, description: e.target.value })
+                  }
                   placeholder="Brief description of this category…"
                   rows={3}
                   className={`w-full ${t.inputBg} border ${t.inputBorder} ${t.text} rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 ${t.inputFocus} transition placeholder:${t.textMuted} resize-none`}
@@ -372,14 +380,23 @@ const goToPage = () => {};
       {/* Delete Confirm Modal */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setDeleteTarget(null)} />
-          <div className={`relative w-full max-w-sm ${t.bgCard} border ${t.border} rounded-3xl p-7 shadow-2xl z-10 text-center`}>
+          <div
+            className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
+            onClick={() => setDeleteTarget(null)}
+          />
+          <div
+            className={`relative w-full max-w-sm ${t.bgCard} border ${t.border} rounded-3xl p-7 shadow-2xl z-10 text-center`}
+          >
             <div className="text-4xl mb-3">🗑️</div>
-            <h2 className={`text-xl font-black ${t.text} mb-2`}>Delete Category?</h2>
+            <h2 className={`text-xl font-black ${t.text} mb-2`}>
+              Delete Category?
+            </h2>
             <p className={`text-sm ${t.textMuted} mb-6`}>
               Are you sure you want to delete{" "}
-              <span className={`font-bold ${t.text}`}>"{deleteTarget.name}"</span>?
-              This cannot be undone.
+              <span className={`font-bold ${t.text}`}>
+                "{getCatName(deleteTarget)}"
+              </span>
+              ? This cannot be undone.
             </p>
             <div className="flex gap-3">
               <button

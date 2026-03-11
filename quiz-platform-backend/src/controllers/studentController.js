@@ -1,4 +1,3 @@
-import models from "../../models/index.js";
 import studentService from "../services/studentService.js";
 const registerStudent = async (req, res) => {
 
@@ -38,7 +37,7 @@ const submitQuiz = async (req, res) => {
 
     res.status(500).json({
       success: false,
-      message: error.message
+      message1: error.message
     });
 
   }
@@ -48,10 +47,10 @@ const submitQuiz = async (req, res) => {
 const startQuiz = async (req, res) => {
 
   try {
-
+    console.log(req.params.id)
     const attempt = await studentService.startQuiz(
       req.user.id,
-      req.body.quiz_id
+      req.params.id
     );
 
     res.status(201).json({
@@ -63,7 +62,7 @@ const startQuiz = async (req, res) => {
 
     res.status(500).json({
       success: false,
-      message: error.message
+      message1: error.message
     });
 
   }

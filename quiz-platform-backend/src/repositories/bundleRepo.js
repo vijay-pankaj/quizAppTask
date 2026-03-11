@@ -5,12 +5,11 @@ const createBundle = async (data) => {
   return await Bundle.create(data);
 };
 
-const getBundles = async (clientId, page, limit, search) => {
+const getBundles = async ( page, limit, search) => {
 
   const offset = (page - 1) * limit;
 
   const where = {
-    client_id: clientId,
   };
 
   if (search) {

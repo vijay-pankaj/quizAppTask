@@ -22,6 +22,7 @@ const createClient = async (data) => {
   return client;
 };
 
+
 export default {
   createClient
 };

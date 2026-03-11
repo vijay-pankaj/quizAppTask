@@ -36,9 +36,9 @@ const getBundles = async (req, res) => {
 
   try {
 
-    const clientId = req.user.id;
+    // const clientId = req.user.id;
 
-    const bundles = await bundleService.getBundles(req.query, clientId);
+    const bundles = await bundleService.getBundles(req.query);
 
     res.status(200).json({
       success: true,

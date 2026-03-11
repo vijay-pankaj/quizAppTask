@@ -1,5 +1,5 @@
 import adminService from "../services/adminService.js";
-
+import models from "../../models/index.js";
 const createClient = async (req, res) => {
 
   try {
@@ -21,6 +21,20 @@ const createClient = async (req, res) => {
   }
 };
 
+const getAllClient = async(req,res)=>{
+  try{
+    const client = await models.Client.findAll()
+     res.status(201).json(
+      client
+    );
+  }catch(error){
+     res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
 export default {
-  createClient
+  createClient,
+  getAllClient
 };

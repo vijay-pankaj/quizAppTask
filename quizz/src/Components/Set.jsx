@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { useTheme } from "../Hooks/useTheame";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { API_BASE_URL } from "../config/api";
-import usePagination from "../Hooks/usePagination";
 import useDebounce from "../Hooks/useDebounce";
+import usePagination from "../Hooks/usePagination";
+import { useTheme } from "../Hooks/useTheame";
 
-const SETS_URL       = `${API_BASE_URL}/sets`;
-const CATEGORIES_URL = `${API_BASE_URL}/categories`;
+const SETS_URL       = `${API_BASE_URL}/api/client/quizzes`;
+const CATEGORIES_URL = `${API_BASE_URL}/api/client`;
 const emptyForm      = { title: "", duration: "", totalMarks: "" };
 
 export default function Set() {
@@ -38,13 +38,13 @@ export default function Set() {
     hasNext,
     fetchData,
     goToPage,
-  } = usePagination(`${SETS_URL}/category/${categoryId}`, { itemsPerPage: 6 });
+  } = usePagination(`${SETS_URL}/${categoryId}`, { itemsPerPage: 6 });
 
   // ── Fetch parent category 
   useEffect(() => {
     const fetchCategory = async () => {
       try {
-        const res = await axios.get(`${CATEGORIES_URL}/${categoryId}`);
+        const res = await axios.get(`${CATEGORIES_URL}/quizzes/${categoryId}`);
         setCategory(res.data);
       } catch {
         setCategory(null);

@@ -1,6 +1,5 @@
-import React from "react";
 import { Link } from "react-router-dom";
-import { useTheme } from "../Hooks/useTheame"
+import { useTheme } from "../Hooks/useTheame";
 
 const categories = [
   { emoji: "🔬", title: "Science", count: 80, color: "text-emerald-500" },
@@ -34,7 +33,7 @@ const Home = () => {
         </p>
         <div className="flex gap-3 justify-center">
           <Link
-            to="/categories"
+            to="/StudentDashboard"
             className={`${t.accentBg} ${t.accentBgHover} text-white px-7 py-3 rounded-xl font-bold text-sm shadow-md transition-all`}
           >
             Start Quiz →

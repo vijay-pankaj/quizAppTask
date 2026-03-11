@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useTheme } from "../Hooks/useTheame";
 import { API_BASE_URL } from "../config/api";
@@ -23,13 +23,13 @@ const Login = () => {
     setLoading(true);
     try {
       const res = await axios.post(`${API_BASE_URL}/api/auth/login`, form);
-
-      const { token, role, userId } = res.data;
+      console.log(res.data.user.name)
+      const { token } = res.data;
 
       // persist to localStorage
       localStorage.setItem("token",  token);
-      localStorage.setItem("role",   role);
-      localStorage.setItem("userId", userId);
+      localStorage.setItem("role",   res.data.user.role_id);
+      localStorage.setItem("userId", res.data.user.id);
 
       toast.success("Login successful! Welcome back 👋");
       navigate("/")

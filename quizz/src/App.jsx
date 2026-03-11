@@ -12,6 +12,7 @@ import Set from "./Components/Set";
 import Quiz from "./Components/Quiz";
 import StartTest from "./Components/StartTest";
 import Result from "./Components/Result";
+import StudentDashboard from "./Components/StudentDashboard"
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -44,6 +45,8 @@ function App() {
                 <Route path="/sets/:setId/start-test"        element={<StartTest />} />
                 <Route path="/result/:resultId"              element={<Result />} />
                 <Route path="/admin"              element={<Admin />} />
+                <Route path="/StudentDashboard"              element={<StudentDashboard />} />
+
 
               </Routes>
             </main>
