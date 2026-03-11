@@ -1,0 +1,9 @@
+{
+  "development": {
+    "username": "root",
+    "password": "Diamond@2713",
+    "database": "quiz_platform",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  }
+}
