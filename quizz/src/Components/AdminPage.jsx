@@ -1,0 +1,542 @@
+import { useState, useEffect, useCallback } from "react";
+import axios from "axios";
+import { useTheme } from "../Hooks/useTheame";
+import { API_BASE_URL } from "../config/api";
+import { toast } from "react-toastify";
+
+const CLIENTS_URL = `${API_BASE_URL}`;
+
+// ── Avatar 
+const COLORS = ["#0d9488","#0891b2","#7c3aed","#db2777","#d97706","#16a34a","#dc2626","#2563eb"];
+const avatarColor = (name = "") => {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
+  return COLORS[Math.abs(h) % COLORS.length];
+};
+const Avatar = ({ name = "?", size = 36 }) => {
+  const bg = avatarColor(name);
+  const initials = name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: "50%",
+      background: `${bg}18`, border: `2px solid ${bg}44`,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      color: bg, fontWeight: 700, fontSize: size * 0.33, flexShrink: 0,
+    }}>{initials}</div>
+  );
+};
+
+// ── Validation
+const emptyForm = { company_name: "", name: "", email: "", contact_number: "", password: "" };
+const validate = (f) => {
+  const e = {};
+  if (!f.company_name.trim())   e.company_name   = "Required";
+  if (!f.name.trim())           e.name           = "Required";
+  if (!f.email.trim())          e.email          = "Required";
+  else if (!/\S+@\S+\.\S+/.test(f.email)) e.email = "Invalid email";
+  if (!f.contact_number.trim()) e.contact_number = "Required";
+  if (!f.password?.trim())      e.password       = "Required";
+  else if (f.password.length < 6) e.password     = "Min 6 chars";
+  return e;
+};
+
+// ── Modal Shell ───────────────────────────────────────────────
+function Modal({ open, onClose, title, subtitle, children }) {
+  useEffect(() => {
+    const fn = e => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", fn);
+    return () => window.removeEventListener("keydown", fn);
+  }, [onClose]);
+  if (!open) return null;
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(15,23,42,0.5)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: 22, width: "100%", maxWidth: 490, boxShadow: "0 28px 70px rgba(0,0,0,0.16)", animation: "admPopIn 0.22s ease", maxHeight: "92vh", overflow: "auto", border: "1px solid #e2e8f0" }}>
+        <div style={{ padding: "22px 26px 18px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+          <div>
+            <h2 style={{ fontFamily: "'Sora',sans-serif", fontWeight: 700, fontSize: 17, color: "#0f172a", margin: 0 }}>{title}</h2>
+            {subtitle && <p style={{ color: "#94a3b8", fontSize: 12.5, marginTop: 3 }}>{subtitle}</p>}
+          </div>
+          <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 7, border: "1.5px solid #e2e8f0", background: "#f8fafc", color: "#64748b", cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.15s" }}
+            onMouseEnter={e => { e.currentTarget.style.background = "#fee2e2"; e.currentTarget.style.borderColor = "#fca5a5"; e.currentTarget.style.color = "#ef4444"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "#f8fafc"; e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.color = "#64748b"; }}>✕</button>
+        </div>
+        <div style={{ padding: "22px 26px" }}>{children}</div>
+      </div>
+    </div>
+  );
+}
+
+// ── Client Form ───────────────────────────────────────────────
+function ClientForm({ initial, onSubmit, onCancel, submitLabel = "Save", loading }) {
+  const [form, setForm] = useState(initial || emptyForm);
+  const [errors, setErrors] = useState({});
+  const [showPass, setShowPass] = useState(false);
+  const set = (k, v) => { setForm(f => ({ ...f, [k]: v })); setErrors(e => ({ ...e, [k]: "" })); };
+
+  const handleSubmit = () => {
+    const e = validate(form);
+    if (Object.keys(e).length) { setErrors(e); return; }
+    onSubmit(form);
+  };
+
+  const inp = (err) => ({
+    width: "100%", padding: "10px 13px", background: err ? "#fef2f2" : "#f8fafc",
+    color: "#0f172a", border: `1.5px solid ${err ? "#fca5a5" : "#e2e8f0"}`,
+    borderRadius: 9, fontFamily: "'DM Sans',sans-serif", fontSize: 13.5,
+    outline: "none", boxSizing: "border-box", transition: "all 0.18s",
+  });
+
+  const fields = [
+    { key: "company_name",   label: "Company Name",   icon: "🏢", placeholder: "e.g. Acme Corp",     type: "text" },
+    { key: "name",           label: "Contact Person", icon: "👤", placeholder: "Full name",          type: "text" },
+    { key: "email",          label: "Email",          icon: "✉️", placeholder: "email@company.com",  type: "email" },
+    { key: "contact_number", label: "Phone",          icon: "📞", placeholder: "+1 (555) 000-0000",  type: "tel" },
+    { key: "password",       label: "Password",       icon: "🔑", placeholder: "Min 6 characters",   type: "password" },
+  ];
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 15 }}>
+      {fields.map(f => (
+        <div key={f.key}>
+          <label style={{ display: "flex", alignItems: "center", gap: 5, color: "#475569", fontSize: 11.5, fontWeight: 600, letterSpacing: 0.5, marginBottom: 6, textTransform: "uppercase", fontFamily: "'Sora',sans-serif" }}>
+            {f.icon} {f.label}
+          </label>
+          <div style={{ position: "relative" }}>
+            <input
+              type={f.type === "password" ? (showPass ? "text" : "password") : f.type}
+              placeholder={f.placeholder}
+              value={form[f.key] || ""}
+              onChange={e => set(f.key, e.target.value)}
+              style={{ ...inp(errors[f.key]), paddingRight: f.type === "password" ? 42 : 13 }}
+              onFocus={e => { e.target.style.borderColor = "#0d9488"; e.target.style.boxShadow = "0 0 0 3px rgba(13,148,136,0.12)"; e.target.style.background = "#fff"; }}
+              onBlur={e => { e.target.style.borderColor = errors[f.key] ? "#fca5a5" : "#e2e8f0"; e.target.style.boxShadow = "none"; e.target.style.background = errors[f.key] ? "#fef2f2" : "#f8fafc"; }}
+            />
+            {f.type === "password" && (
+              <button onClick={() => setShowPass(s => !s)} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#94a3b8", fontSize: 14 }}>
+                {showPass ? "🙈" : "👁️"}
+              </button>
+            )}
+          </div>
+          {errors[f.key] && <p style={{ color: "#ef4444", fontSize: 11.5, marginTop: 4 }}>⚠ {errors[f.key]}</p>}
+        </div>
+      ))}
+      <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
+        <button onClick={onCancel} disabled={loading} style={{ flex: 1, padding: "10px", background: "#f8fafc", border: "1.5px solid #e2e8f0", borderRadius: 9, color: "#64748b", fontFamily: "'Sora',sans-serif", fontWeight: 600, fontSize: 13.5, cursor: "pointer" }}
+          onMouseEnter={e => { e.currentTarget.style.background = "#f1f5f9"; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "#f8fafc"; }}>Cancel</button>
+        <button onClick={handleSubmit} disabled={loading} style={{ flex: 2, padding: "10px", background: "linear-gradient(135deg,#0d9488,#0891b2)", border: "none", borderRadius: 9, color: "#fff", fontFamily: "'Sora',sans-serif", fontWeight: 700, fontSize: 13.5, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1, transition: "all 0.2s", boxShadow: "0 3px 12px rgba(13,148,136,0.28)" }}
+          onMouseEnter={e => { if (!loading) { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 18px rgba(13,148,136,0.38)"; }}}
+          onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 3px 12px rgba(13,148,136,0.28)"; }}>
+          {loading ? "Saving…" : submitLabel}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── View Modal ────────────────────────────────────────────────
+function ViewModal({ open, onClose, client }) {
+  const [showPass, setShowPass] = useState(false);
+  useEffect(() => { if (!open) setShowPass(false); }, [open]);
+  if (!client) return null;
+  const color = avatarColor(client.name);
+  const rows = [
+    { label: "Company",        value: client.company_name,   icon: "🏢" },
+    { label: "Contact Person", value: client.name,           icon: "👤" },
+    { label: "Email",          value: client.email,          icon: "✉️" },
+    { label: "Phone",          value: client.contact_number, icon: "📞" },
+    { label: "Password",       value: showPass ? client.password : "••••••••", icon: "🔑", toggle: true },
+    { label: "Joined",         value: client.createdAt ? new Date(client.createdAt).toLocaleDateString("en-US",{ year:"numeric", month:"long", day:"numeric" }) : "—", icon: "📅" },
+  ];
+  return (
+    <Modal open={open} onClose={onClose} title="Client Profile" subtitle="Full account details">
+      <div style={{ background: `${color}0e`, border: `1.5px solid ${color}28`, borderRadius: 14, padding: "16px 18px", marginBottom: 18, display: "flex", alignItems: "center", gap: 14 }}>
+        <Avatar name={client.name} size={52} />
+        <div style={{ flex: 1 }}>
+          <div style={{ fontFamily: "'Sora',sans-serif", fontWeight: 700, fontSize: 16, color: "#0f172a" }}>{client.name}</div>
+          <div style={{ color, fontSize: 13, marginTop: 2 }}>{client.company_name}</div>
+        </div>
+        <span style={{ background: "#f0fdf4", border: "1px solid #86efac", color: "#15803d", borderRadius: 20, padding: "3px 11px", fontSize: 11.5, fontWeight: 600, fontFamily: "'Sora',sans-serif" }}>● Active</span>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+        {rows.map(r => (
+          <div key={r.label} style={{ display: "flex", alignItems: "center", padding: "10px 13px", background: "#f8fafc", borderRadius: 9, border: "1px solid #f1f5f9" }}>
+            <span style={{ fontSize: 14, marginRight: 11, flexShrink: 0 }}>{r.icon}</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ color: "#94a3b8", fontSize: 10, textTransform: "uppercase", letterSpacing: 0.7, fontWeight: 600, marginBottom: 2 }}>{r.label}</div>
+              <div style={{ color: "#1e293b", fontSize: 13.5 }}>{r.value}</div>
+            </div>
+            {r.toggle && (
+              <button onClick={() => setShowPass(s => !s)} style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8", fontSize: 13, padding: 4 }}>
+                {showPass ? "🙈" : "👁️"}
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+    </Modal>
+  );
+}
+
+// ── Delete Modal ──────────────────────────────────────────────
+function DeleteModal({ open, onClose, onConfirm, clientName, loading }) {
+  return (
+    <Modal open={open} onClose={() => !loading && onClose()} title="Delete Client" subtitle="This action is permanent">
+      <div style={{ textAlign: "center", padding: "4px 0 8px" }}>
+        <div style={{ width: 60, height: 60, borderRadius: "50%", background: "#fef2f2", border: "2px solid #fecaca", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", fontSize: 26 }}>🗑️</div>
+        <p style={{ color: "#475569", fontSize: 14.5, lineHeight: 1.7 }}>
+          Remove <strong style={{ color: "#0f172a", fontFamily: "'Sora',sans-serif" }}>{clientName}</strong> from the system?
+        </p>
+        <p style={{ color: "#94a3b8", fontSize: 12.5, marginTop: 6 }}>All associated data will be permanently deleted.</p>
+        <div style={{ display: "flex", gap: 10, marginTop: 22 }}>
+          <button onClick={onClose} disabled={loading} style={{ flex: 1, padding: "10px", background: "#f8fafc", border: "1.5px solid #e2e8f0", borderRadius: 9, color: "#64748b", fontFamily: "'Sora',sans-serif", fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+          <button onClick={onConfirm} disabled={loading} style={{ flex: 1, padding: "10px", background: "linear-gradient(135deg,#ef4444,#dc2626)", border: "none", borderRadius: 9, color: "#fff", fontFamily: "'Sora',sans-serif", fontWeight: 700, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1, transition: "all 0.2s", boxShadow: "0 3px 12px rgba(239,68,68,0.25)" }}
+            onMouseEnter={e => { if (!loading) e.currentTarget.style.boxShadow = "0 6px 18px rgba(239,68,68,0.38)"; }}
+            onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 3px 12px rgba(239,68,68,0.25)"; }}>
+            {loading ? "Deleting…" : "Yes, Delete"}
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+// ── Skeleton ──────────────────────────────────────────────────
+const SkeletonRow = () => (
+  <tr>
+    {[260, 140, 180, 130, 100, 90].map((w, i) => (
+      <td key={i} style={{ padding: "14px 18px" }}>
+        <div style={{ height: 13, width: w, maxWidth: "100%", borderRadius: 6, background: "linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%)", backgroundSize: "200% 100%", animation: "admShimmer 1.4s infinite" }} />
+      </td>
+    ))}
+  </tr>
+);
+
+// ── Main ──────────────────────────────────────────────────────
+export default function AdminPage() {
+  const { t } = useTheme();
+
+  const [clients,      setClients]      = useState([]);
+  const [loading,      setLoading]      = useState(true);
+  const [submitting,   setSubmitting]   = useState(false);
+  const [search,       setSearch]       = useState("");
+  const [sortField,    setSortField]    = useState("createdAt");
+  const [sortDir,      setSortDir]      = useState("desc");
+
+  const [addOpen,      setAddOpen]      = useState(false);
+  const [editClient,   setEditClient]   = useState(null);
+  const [viewClient,   setViewClient]   = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  // ── READ ───────────────────────────────────────────────────
+  const fetchClients = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(CLIENTS_URL);
+      setClients(res.data);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to load clients");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchClients(); }, [fetchClients]);
+
+  // ── CREATE ─────────────────────────────────────────────────
+  const handleAdd = async (form) => {
+    setSubmitting(true);
+    try {
+      await axios.post(`${CLIENTS_URL}/api/admin/create-client`, form);
+      toast.success(`${form.name} added successfully!`);
+      setAddOpen(false);
+      fetchClients();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to add client");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // ── UPDATE ─────────────────────────────────────────────────
+  const handleEdit = async (form) => {
+    setSubmitting(true);
+    try {
+      await axios.put(`${CLIENTS_URL}/${editClient._id || editClient.id}`, form);
+      toast.success(`${form.name} updated successfully!`);
+      setEditClient(null);
+      fetchClients();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update client");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // ── DELETE ─────────────────────────────────────────────────
+  const handleDelete = async () => {
+    setSubmitting(true);
+    try {
+      await axios.delete(`${CLIENTS_URL}/${deleteTarget._id || deleteTarget.id}`);
+      toast.success(`${deleteTarget.name} has been removed`);
+      setDeleteTarget(null);
+      fetchClients();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to delete client");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // ── Filter & Sort ──────────────────────────────────────────
+  const q = search.toLowerCase();
+  const filtered = [...clients]
+    .filter(c => [c.company_name, c.name, c.email, c.contact_number].some(v => (v || "").toLowerCase().includes(q)))
+    .sort((a, b) => {
+      const va = (a[sortField] || "").toString();
+      const vb = (b[sortField] || "").toString();
+      return sortDir === "asc" ? va.localeCompare(vb) : vb.localeCompare(va);
+    });
+
+  const handleSort = (field) => {
+    if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortField(field); setSortDir("asc"); }
+  };
+
+  const SortIcon = ({ field }) => (
+    <span style={{ marginLeft: 4, color: sortField === field ? "#0d9488" : "#cbd5e1", fontSize: 10 }}>
+      {sortField === field ? (sortDir === "asc" ? "↑" : "↓") : "↕"}
+    </span>
+  );
+
+  const stats = [
+    { icon: "👥", label: "Total Clients",   value: clients.length,                                  color: "#0d9488", bg: "#f0fdfa", bdr: "#99f6e4" },
+    { icon: "🏢", label: "Companies",       value: new Set(clients.map(c => c.company_name)).size,  color: "#0891b2", bg: "#f0f9ff", bdr: "#7dd3fc" },
+    { icon: "✅", label: "Active",          value: clients.length,                                  color: "#16a34a", bg: "#f0fdf4", bdr: "#86efac" },
+    { icon: "🔍", label: "Search Results",  value: filtered.length,                                 color: "#d97706", bg: "#fffbeb", bdr: "#fde68a" },
+  ];
+
+  const cols = [
+    { label: "Client",  key: "name" },
+    { label: "Company", key: "company_name" },
+    { label: "Email",   key: "email" },
+    { label: "Phone",   key: null },
+    { label: "Joined",  key: "createdAt" },
+    { label: "Actions", key: null },
+  ];
+
+  return (
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600&display=swap');
+        @keyframes admPopIn   { from{opacity:0;transform:scale(0.95) translateY(8px)} to{opacity:1;transform:scale(1) translateY(0)} }
+        @keyframes admFadeUp  { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes admShimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+        .adm-row:hover { background: #f0fdfa !important; }
+        .adm-row:hover .adm-acts { opacity: 1 !important; }
+        .adm-acts { opacity: 0; transition: opacity 0.18s; }
+        .adm-stat { transition: all 0.2s; cursor: default; }
+        .adm-stat:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.09) !important; }
+      `}</style>
+
+      <div className={`min-h-screen ${t.bg} p-6`} style={{ fontFamily: "'DM Sans',sans-serif" }}>
+        <div style={{ maxWidth: 1140, margin: "0 auto" }}>
+
+          {/* Header */}
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 26, flexWrap: "wrap", gap: 14, animation: "admFadeUp 0.35s ease" }}>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 5 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#0d9488,#0891b2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, boxShadow: "0 4px 12px rgba(13,148,136,0.3)" }}>👥</div>
+                <h1 style={{ fontFamily: "'Sora',sans-serif", fontWeight: 800, fontSize: 22, color: "#0f172a", margin: 0 }}>Client Management</h1>
+              </div>
+              <p style={{ color: "#64748b", fontSize: 13.5, margin: 0 }}>Manage all client accounts — add, view, edit, and remove.</p>
+            </div>
+            <button onClick={() => setAddOpen(true)} style={{ display: "flex", alignItems: "center", gap: 8, background: "linear-gradient(135deg,#0d9488,#0891b2)", border: "none", borderRadius: 11, padding: "11px 20px", color: "#fff", fontFamily: "'Sora',sans-serif", fontWeight: 700, fontSize: 14, cursor: "pointer", boxShadow: "0 4px 14px rgba(13,148,136,0.32)", transition: "all 0.2s" }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 22px rgba(13,148,136,0.42)"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 14px rgba(13,148,136,0.32)"; }}>
+              <span style={{ fontSize: 18, lineHeight: 1 }}>＋</span> Add Client
+            </button>
+          </div>
+
+          {/* Stats */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 14, marginBottom: 24 }}>
+            {stats.map((s, i) => (
+              <div key={s.label} className="adm-stat" style={{ background: "#fff", borderRadius: 14, padding: "16px 18px", border: "1.5px solid #f1f5f9", boxShadow: "0 2px 8px rgba(0,0,0,0.04)", display: "flex", alignItems: "center", gap: 13, animation: `admFadeUp 0.4s ${i * 0.07}s ease both` }}>
+                <div style={{ width: 44, height: 44, borderRadius: 11, background: s.bg, border: `1.5px solid ${s.bdr}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 19, flexShrink: 0 }}>{s.icon}</div>
+                <div>
+                  <div style={{ fontFamily: "'Sora',sans-serif", fontWeight: 800, fontSize: 24, color: "#0f172a", lineHeight: 1 }}>{loading ? "—" : s.value}</div>
+                  <div style={{ color: "#94a3b8", fontSize: 12, marginTop: 4, fontWeight: 500 }}>{s.label}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Table Card */}
+          <div style={{ background: "#fff", borderRadius: 18, border: "1.5px solid #e2e8f0", overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.05)", animation: "admFadeUp 0.45s 0.1s ease both" }}>
+
+            {/* Toolbar */}
+            <div style={{ padding: "16px 22px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
+              <div>
+                <h3 style={{ fontFamily: "'Sora',sans-serif", fontWeight: 700, fontSize: 14.5, color: "#0f172a", margin: 0 }}>All Clients</h3>
+                <p style={{ color: "#94a3b8", fontSize: 12, marginTop: 2 }}>
+                  {loading ? "Loading…" : `${filtered.length} of ${clients.length} records${search ? ` · "${search}"` : ""}`}
+                </p>
+              </div>
+              <div style={{ position: "relative" }}>
+                <span style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "#94a3b8", fontSize: 13 }}>🔍</span>
+                <input
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Search clients…"
+                  style={{ padding: "9px 34px 9px 34px", background: "#f8fafc", color: "#0f172a", border: "1.5px solid #e2e8f0", borderRadius: 9, fontFamily: "'DM Sans',sans-serif", fontSize: 13, outline: "none", width: 260, transition: "all 0.18s" }}
+                  onFocus={e => { e.target.style.borderColor = "#0d9488"; e.target.style.background = "#fff"; e.target.style.boxShadow = "0 0 0 3px rgba(13,148,136,0.1)"; }}
+                  onBlur={e => { e.target.style.borderColor = "#e2e8f0"; e.target.style.background = "#f8fafc"; e.target.style.boxShadow = "none"; }}
+                />
+                {search && (
+                  <button onClick={() => setSearch("")} style={{ position: "absolute", right: 9, top: "50%", transform: "translateY(-50%)", background: "#e2e8f0", border: "none", borderRadius: "50%", width: 17, height: 17, cursor: "pointer", color: "#64748b", fontSize: 9, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+                )}
+              </div>
+            </div>
+
+            {/* Table */}
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 720 }}>
+                <thead>
+                  <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
+                    {cols.map(col => (
+                      <th key={col.label} onClick={() => col.key && handleSort(col.key)} style={{ padding: "12px 18px", textAlign: "left", color: "#64748b", fontFamily: "'Sora',sans-serif", fontWeight: 600, fontSize: 11, letterSpacing: 0.7, textTransform: "uppercase", whiteSpace: "nowrap", cursor: col.key ? "pointer" : "default", userSelect: "none", transition: "color 0.15s" }}
+                        onMouseEnter={e => { if (col.key) e.currentTarget.style.color = "#0d9488"; }}
+                        onMouseLeave={e => { e.currentTarget.style.color = "#64748b"; }}>
+                        <span style={{ display: "inline-flex", alignItems: "center" }}>
+                          {col.label}{col.key && <SortIcon field={col.key} />}
+                        </span>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
+                  ) : filtered.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} style={{ padding: "60px 20px", textAlign: "center" }}>
+                        <div style={{ fontSize: 44, marginBottom: 12 }}>
+                          {search ? "🔍" : "👥"}
+                        </div>
+                        <div style={{ fontFamily: "'Sora',sans-serif", fontWeight: 600, color: "#334155", fontSize: 15 }}>
+                          {search ? `No results for "${search}"` : "No clients yet"}
+                        </div>
+                        <div style={{ color: "#94a3b8", fontSize: 13, marginTop: 6 }}>
+                          {search ? "Try a different search term" : 'Click "+ Add Client" above to get started'}
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    filtered.map((c, i) => {
+                      const color = avatarColor(c.name);
+                      return (
+                        <tr key={c._id || c.id} className="adm-row" style={{ borderBottom: "1px solid #f8fafc", background: "#fff", transition: "background 0.15s", animation: `admFadeUp 0.32s ${i * 0.035}s ease both` }}>
+
+                          {/* Client */}
+                          <td style={{ padding: "13px 18px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+                              <Avatar name={c.name} size={36} />
+                              <div>
+                                <div style={{ fontFamily: "'Sora',sans-serif", fontWeight: 600, fontSize: 13.5, color: "#1e293b" }}>{c.name}</div>
+                                <div style={{ color: "#94a3b8", fontSize: 11, marginTop: 1 }}>#{(c._id || c.id || "").toString().slice(-6)}</div>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Company */}
+                          <td style={{ padding: "13px 18px" }}>
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: `${color}0e`, border: `1px solid ${color}2e`, borderRadius: 7, padding: "4px 10px" }}>
+                              <span style={{ fontSize: 12 }}>🏢</span>
+                              <span style={{ color, fontSize: 12.5, fontWeight: 600, fontFamily: "'Sora',sans-serif", whiteSpace: "nowrap" }}>{c.company_name}</span>
+                            </span>
+                          </td>
+
+                          {/* Email */}
+                          <td style={{ padding: "13px 18px", color: "#475569", fontSize: 13 }}>{c.email}</td>
+
+                          {/* Phone */}
+                          <td style={{ padding: "13px 18px", color: "#64748b", fontSize: 13, whiteSpace: "nowrap" }}>{c.contact_number}</td>
+
+                          {/* Joined */}
+                          <td style={{ padding: "13px 18px" }}>
+                            <span style={{ color: "#94a3b8", fontSize: 12.5 }}>
+                              {c.createdAt ? new Date(c.createdAt).toLocaleDateString("en-US",{ month:"short", day:"numeric", year:"numeric" }) : "—"}
+                            </span>
+                          </td>
+
+                          {/* Actions */}
+                          <td style={{ padding: "13px 18px" }}>
+                            <div className="adm-acts" style={{ display: "flex", gap: 6 }}>
+                              {[
+                                { label: "View",   icon: "👁️", bg: "#f0f9ff", bdr: "#7dd3fc", clr: "#0369a1", fn: () => setViewClient(c) },
+                                { label: "Edit",   icon: "✏️", bg: "#fffbeb", bdr: "#fde68a", clr: "#b45309", fn: () => setEditClient(c) },
+                                { label: "Delete", icon: "🗑️", bg: "#fef2f2", bdr: "#fecaca", clr: "#b91c1c", fn: () => setDeleteTarget(c) },
+                              ].map(btn => (
+                                <button key={btn.label} onClick={btn.fn} title={btn.label} style={{ width: 31, height: 31, borderRadius: 7, background: btn.bg, border: `1px solid ${btn.bdr}`, color: btn.clr, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 13, transition: "transform 0.15s" }}
+                                  onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.14)"; }}
+                                  onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}>
+                                  {btn.icon}
+                                </button>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Footer */}
+            <div style={{ padding: "12px 22px", borderTop: "1px solid #f1f5f9", background: "#fafafa", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ color: "#94a3b8", fontSize: 12 }}>
+                {loading
+                  ? "Loading records…"
+                  : <> Showing <strong style={{ color: "#0d9488" }}>{filtered.length}</strong> of <strong style={{ color: "#0d9488" }}>{clients.length}</strong> clients </>
+                }
+              </span>
+              <span style={{ color: "#cbd5e1", fontSize: 11.5 }}>Hover a row to reveal actions</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Add Modal */}
+      <Modal open={addOpen} onClose={() => !submitting && setAddOpen(false)} title="Add New Client" subtitle="Fill in the details to create a client account">
+        <ClientForm onSubmit={handleAdd} onCancel={() => setAddOpen(false)} submitLabel="Add Client" loading={submitting} />
+      </Modal>
+
+      {/* Edit Modal */}
+      <Modal open={!!editClient} onClose={() => !submitting && setEditClient(null)} title="Edit Client" subtitle={`Updating — ${editClient?.name || ""}`}>
+        {editClient && (
+          <ClientForm
+            key={editClient._id || editClient.id}
+            initial={{ company_name: editClient.company_name, name: editClient.name, email: editClient.email, contact_number: editClient.contact_number, password: editClient.password }}
+            onSubmit={handleEdit}
+            onCancel={() => setEditClient(null)}
+            submitLabel="Save Changes"
+            loading={submitting}
+          />
+        )}
+      </Modal>
+
+      {/* View Modal */}
+      <ViewModal open={!!viewClient} onClose={() => setViewClient(null)} client={viewClient} />
+
+      {/* Delete Modal */}
+      <DeleteModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        clientName={deleteTarget?.name}
+        loading={submitting}
+      />
+    </>
+  );
+}

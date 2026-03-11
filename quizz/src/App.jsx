@@ -13,10 +13,15 @@ import Quiz from "./Components/Quiz";
 import StartTest from "./Components/StartTest";
 import Result from "./Components/Result";
 
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import Admin from "./Components/AdminPage"
+
 import Protected from "./Auth/Protected"
 import AuthProtected from "./Auth/AuthProtected"
 
 function App() {
+  
   return (
     <ThemeProvider>
       <BrowserRouter>
@@ -38,12 +43,23 @@ function App() {
                 <Route path="/sets/:setId/quiz"              element={<Quiz />} />
                 <Route path="/sets/:setId/start-test"        element={<StartTest />} />
                 <Route path="/result/:resultId"              element={<Result />} />
+                <Route path="/admin"              element={<Admin />} />
+
               </Routes>
             </main>
             <Footer />
           </div>
 
         </div>
+        <ToastContainer
+  position="top-right"
+  autoClose={3000}
+  hideProgressBar={false}
+  newestOnTop
+  closeOnClick
+  pauseOnHover
+  theme="colored"
+/>
       </BrowserRouter>
     </ThemeProvider>
   );
