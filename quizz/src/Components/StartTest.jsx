@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useTheme } from "../Hooks/useTheame";
 import { API_BASE_URL } from "../config/api";
 
-const QUIZ_URL    = `${API_BASE_URL}/quiz`;
+const QUIZ_URL    = `${API_BASE_URL}/api/student/bundle`;
 const SETS_URL    = `${API_BASE_URL}/sets`;
 const RESULTS_URL = `${API_BASE_URL}/results`;
 const OPTIONS     = ["A", "B", "C", "D"];
@@ -31,7 +31,7 @@ export default function StartTest() {
       try {
         const [setRes, qRes] = await Promise.all([
           axios.get(`${SETS_URL}/${setId}`),
-          axios.get(`${QUIZ_URL}/set/${setId}/all`),
+          axios.get(`${QUIZ_URL}/${setId}/quizzes`),
         ]);
         setSet(setRes.data);
         setQuestions(qRes.data?.data ?? qRes.data ?? []);

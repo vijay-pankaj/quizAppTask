@@ -1,4 +1,5 @@
 import studentService from "../services/studentService.js";
+import models from "../../models/index.js";
 const registerStudent = async (req, res) => {
 
   try {
@@ -68,8 +69,40 @@ const startQuiz = async (req, res) => {
   }
 
 };
+const getQuestions = async (req, res) => {
+
+  try {
+
+    const questions = await models.Question.findAll({
+      where: { quiz_id: req.params.id },
+      attributes: [
+        "id",
+        "question",
+        "option_a",
+        "option_b",
+        "option_c",
+        "option_d"
+      ]
+    });
+
+    res.status(200).json({
+      success: true,
+      data: questions
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+
+  }
+
+};
 export default {
   registerStudent,
   submitQuiz,
-  startQuiz
+  startQuiz,
+  getQuestions
 };  
