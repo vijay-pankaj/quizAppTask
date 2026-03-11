@@ -4,7 +4,7 @@ import { useTheme } from "../Hooks/useTheame";
 import { API_BASE_URL } from "../config/api";
 import { toast } from "react-toastify";
 
-const BASE = `${API_BASE_URL}/api/client`;
+const BASE = `${API_BASE_URL}/api`;
 
 // ── Avatar ────────────────────────────────────────────────────
 const COLORS = ["#0d9488","#0891b2","#7c3aed","#db2777","#d97706","#16a34a","#dc2626","#2563eb"];
@@ -93,7 +93,7 @@ function ClientForm({ initial, onSubmit, onCancel, submitLabel = "Save", loading
 
   const fields = [
     { key: "company_name",   label: "Company Name",   icon: "🏢", placeholder: "e.g. Acme Corp",    type: "text"  },
-    { key: "name",           label: "Contact Person", icon: "👤", placeholder: "Full name",         type: "text"  },
+    { key: "name",           label: "name", icon: "👤", placeholder: "Full name",         type: "text"  },
     { key: "email",          label: "Email",          icon: "✉️", placeholder: "email@company.com", type: "email" },
     { key: "contact_number", label: "Phone",          icon: "📞", placeholder: "+1 (555) 000-0000", type: "tel"   },
     { key: "password",       label: isEdit ? "Password (leave blank to keep)" : "Password", icon: "🔑", placeholder: isEdit ? "Leave blank to keep current" : "Min 6 characters", type: "password" },
@@ -234,7 +234,7 @@ export default function AdminPage() {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(BASE, {
-        headers: { authorizationtoken: token }
+        headers: { authorization: `Bearer ${token}` }
       });
       setClients(res.data);
     } catch (err) {
@@ -251,8 +251,9 @@ export default function AdminPage() {
     setSubmitting(true);
     try {
       const token = localStorage.getItem("token");
-      await axios.post(`${BASE}/create-client`,form, {
-        headers: { authorizationtoken: token }
+      console.log(token);
+      await axios.post(`${BASE}/admin/create-client`,form, {
+        headers: { authorization: `Bearer ${token}` }
       });
       toast.success(`${form.name} added successfully!`);
       setAddOpen(false);
@@ -271,7 +272,7 @@ export default function AdminPage() {
       const token = localStorage.getItem("token");
       const id = editClient._id || editClient.id;
       await axios.put(`${BASE}/${id}`, form, {
-        headers: { authorizationtoken: token }
+        headers: { authorization: `Bearer ${token}` }
       });
       toast.success(`${form.name} updated!`);
       setEditClient(null);
@@ -283,14 +284,14 @@ export default function AdminPage() {
     }
   };
 
-  // ── DELETE ────────────────────────────────────────────────
+  // ── DELETE
   const handleDelete = async () => {
     setSubmitting(true);
     try {
       const token = localStorage.getItem("token");
       const id = deleteTarget._id || deleteTarget.id;
       await axios.delete(`${BASE}/${id}`, {
-        headers: { authorizationtoken: token }
+         headers: { authorization: `Bearer ${token}` }
       });
       toast.success(`${deleteTarget.name} removed`);
       setDeleteTarget(null);
