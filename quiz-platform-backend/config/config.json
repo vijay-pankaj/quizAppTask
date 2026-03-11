@@ -1,7 +1,8 @@
+
 {
   "development": {
     "username": "root",
-    "password": "Diamond@2713",
+    "password": "Vedpankaj@1",
     "database": "quiz_platform",
     "host": "127.0.0.1",
     "dialect": "mysql"
