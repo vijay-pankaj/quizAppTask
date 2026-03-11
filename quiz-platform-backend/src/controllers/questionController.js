@@ -1,30 +1,33 @@
 import models from "../../models/index.js";
 import questionService from "../services/questionService.js";
+
 const createQuestion = async (req, res) => {
 
   try {
 
     const quizId = req.params.id;
-    console.log(quizId)
+
     const quiz = await models.Quiz.findByPk(quizId);
 
     if (!quiz) {
+
       return res.status(404).json({
         success: false,
         message: "Quiz does not exist"
       });
+
     }
 
     const question = await questionService.createQuestion(req.body, quizId);
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       data: question
     });
 
   } catch (error) {
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message
     });
@@ -32,6 +35,7 @@ const createQuestion = async (req, res) => {
   }
 
 };
+
 
 const getQuestions = async (req, res) => {
 
@@ -41,16 +45,16 @@ const getQuestions = async (req, res) => {
 
     const questions = await questionService.getQuestions(quizId);
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      data: questions,
+      data: questions
     });
 
   } catch (error) {
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: error.message,
+      message: error.message
     });
 
   }
@@ -59,5 +63,5 @@ const getQuestions = async (req, res) => {
 
 export default {
   createQuestion,
-  getQuestions,
+  getQuestions
 };

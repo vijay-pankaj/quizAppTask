@@ -1,108 +1,73 @@
-import studentService from "../services/studentService.js";
 import models from "../../models/index.js";
+import studentService from "../services/studentService.js";
+
+
 const registerStudent = async (req, res) => {
-
   try {
-    console.log(req.body)
     const student = await studentService.registerStudent(req.body);
-
-    res.status(201).json({
-      success: true,
-      data: student
-    });
-
+    res.status(201).json({ success: true, data: student });
   } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-
+    res.status(500).json({ success: false, message: error.message });
   }
-
 };
-const submitQuiz = async (req, res) => {
 
-  try {
-
-    const { attempt_id, answers } = req.body;
-
-    const score = await studentService.submitQuiz(attempt_id, answers);
-
-    res.status(200).json({
-      success: true,
-      score
-    });
-
-  } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message1: error.message
-    });
-
-  }
-
-};
 
 const startQuiz = async (req, res) => {
-
   try {
-    console.log(req.params.id)
-    const attempt = await studentService.startQuiz(
-      req.user.id,
-      req.params.id
-    );
-
-    res.status(201).json({
-      success: true,
-      attempt_id: attempt.id
-    });
-
+    const attempt = await studentService.startQuiz(req.user.id, req.params.id);
+    res.status(201).json({ success: true, attempt_id: attempt.id });
   } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message1: error.message
-    });
-
+    res.status(500).json({ success: false, message: error.message });
   }
-
 };
-const getQuestions = async (req, res) => {
 
+
+const submitQuiz = async (req, res) => {
   try {
+    const { answers } = req.body;
+    const { id }      = req.params;   // attempt_id from URL
 
+    const score = await studentService.submitQuiz(id, answers);
+
+    res.status(200).json({ success: true, score });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+const getQuestions = async (req, res) => {
+  try {
     const questions = await models.Question.findAll({
       where: { quiz_id: req.params.id },
       attributes: [
-        "id",
-        "question",
-        "option_a",
-        "option_b",
-        "option_c",
-        "option_d"
+        "id", "question",
+        "option_a", "option_b", "option_c", "option_d"
+        // NOTE: correct_answer is intentionally excluded — never send to frontend
       ]
     });
 
-    res.status(200).json({
-      success: true,
-      data: questions
-    });
-
+    res.status(200).json({ success: true, data: questions });
   } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-
+    res.status(500).json({ success: false, message: error.message });
   }
-
 };
+
+
+const getResult = async (req, res) => {
+  try {
+    const result = await studentService.getResult(req.params.id);
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
 export default {
   registerStudent,
-  submitQuiz,
   startQuiz,
-  getQuestions
-};  
+  submitQuiz,
+  getQuestions,
+  getResult
+};

@@ -1,21 +1,21 @@
-import Question from "../../models/question.js";
+import models from "../../models/index.js";
 
-const createQuestion = async (data) => {
+const createQuestion = async (data, transaction = null) => {
 
-  return await Question.create(data);
+  return await models.Question.create(data, { transaction });
 
 };
 
 const getQuestions = async (quizId) => {
 
-  return await Question.findAll({
+  return await models.Question.findAll({
     where: { quiz_id: quizId },
-    order: [["createdAt", "DESC"]],
+    order: [["createdAt", "DESC"]]
   });
 
 };
 
 export default {
   createQuestion,
-  getQuestions,
+  getQuestions
 };

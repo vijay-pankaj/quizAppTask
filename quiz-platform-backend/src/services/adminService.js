@@ -1,27 +1,47 @@
 import bcrypt from "bcrypt";
+import sequelize from "../config/sequelizeConfig.js";
 import clientRepo from "../repositories/clientRepo.js";
 import userRepo from "../repositories/userRepo.js";
 
 const createClient = async (data) => {
 
-  const hashedPassword = await bcrypt.hash(data.password, 10);
+  const transaction = await sequelize.transaction();
 
-  const user = await userRepo.createUser({
-    name: data.name,
-    email: data.email,
-    password: hashedPassword,
-    role_id: 2
-  });
+  try {
 
-  const client = await clientRepo.createClient({
-    user_id: user.id,
-    company_name: data.company_name,
-    contact_number: data.contact_number
-  });
+    const hashedPassword = await bcrypt.hash(data.password, 10);
 
-  return client;
+    const user = await userRepo.createUser(
+      {
+        name: data.name,
+        email: data.email,
+        password: hashedPassword,
+        role_id: 2
+      },
+      transaction
+    );
+
+    const client = await clientRepo.createClient(
+      {
+        user_id: user.id,
+        company_name: data.company_name,
+        contact_number: data.contact_number
+      },
+      transaction
+    );
+
+    await transaction.commit();
+
+    return client;
+
+  } catch (error) {
+
+    await transaction.rollback();
+    throw error;
+
+  }
+
 };
-
 
 export default {
   createClient
