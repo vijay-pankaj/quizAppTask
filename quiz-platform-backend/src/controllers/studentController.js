@@ -62,6 +62,59 @@ const getResult = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+const updateStudent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = req.body;
+
+    const student = await studentService.updateStudent(id, data);
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found"
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Student updated successfully",
+      data: student
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+const deleteStudent = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const student = await studentService.deleteStudent(id);
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found"
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Student deleted successfully"
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
 
 
 export default {
@@ -69,5 +122,7 @@ export default {
   startQuiz,
   submitQuiz,
   getQuestions,
-  getResult
+  getResult,
+  deleteStudent,
+  updateStudent
 };

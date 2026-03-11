@@ -80,7 +80,7 @@ export default function Set() {
       duration:   set.duration,
       totalMarks: set.totalMarks,
     });
-    setEditId(set._id);
+    setEditId(set.id);
     setShowModal(true);
   };
 
@@ -99,6 +99,7 @@ export default function Set() {
     Number(form.duration) > 0 &&
     Number(form.totalMarks) > 0;
 
+    console.log(editId)
   // ── Create / Update 
   const handleSubmit = async () => {
     if (!isValid) return;
@@ -111,9 +112,11 @@ export default function Set() {
         totalMarks: Number(form.totalMarks),
       };
       if (editId) {
-        await axios.put(`${SETS_URL}/${editId}`, payload);
+        await axios.put(`${SETS_URL}/client/quiz/${editId}`, payload,{headers:{
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }});
       } else {
-        await axios.post(`${SETS_URL}/quiz`,{ ...payload, categoryId },{headers:{
+        await axios.post(`${SETS_URL}/quiz1`,{ ...payload, categoryId },{headers:{
           Authorization: `Bearer ${localStorage.getItem('token')}`
         }});
       }
@@ -128,10 +131,13 @@ export default function Set() {
 
   // ── Delete 
   const confirmDelete = async () => {
+    console.log("deleteTarget.id",deleteTarget.id)
     setSubmitting(true);
     setError(null);
     try {
-      await axios.delete(`${SETS_URL}/${deleteTarget._id}`);
+      await axios.delete(`${SETS_URL}/admin/quiz/${deleteTarget.id}`,{headers:{
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }});
       setDeleteTarget(null);
       const targetPage =
         sets.length === 1 && currentPage > 1 ? currentPage - 1 : currentPage;

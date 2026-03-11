@@ -236,7 +236,7 @@ export default function AdminPage() {
       const res = await axios.get(`${BASE}/admin/allclients`, {
         headers: { authorization: `Bearer ${token}` }
       });
-      setClients(res.data);
+      setClients(res.data.data);
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to load clients");
     } finally {
@@ -245,7 +245,7 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => { fetchClients(); }, [fetchClients]);
-
+console.log(clients.data)
   //CREATE
   const handleAdd = async (form) => {
     setSubmitting(true);

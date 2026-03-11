@@ -14,15 +14,17 @@ router.post(
 
 router.get(
   "/bundle",
-   authMiddleware,
+  authMiddleware,
   // roleMiddleware(2,3),
   bundleController.getBundles
 );
+router.put("/bundle/:id",authMiddleware, bundleController.updateBundle);
+router.delete("/bundle/:id",authMiddleware, bundleController.deleteBundle);
 
 import quizController from "../controllers/quizController.js";
 
 router.post(
-  "/quiz",
+  "/quiz1",
   authMiddleware,
   roleMiddleware(2),
   quizController.createQuiz
@@ -34,7 +36,8 @@ router.get(
   // roleMiddleware(2),
   quizController.getQuizzes
 );
-
+router.put("/client/quiz/:id",authMiddleware, quizController.updateQuiz);
+router.delete("/admin/quiz/:id",authMiddleware, quizController.deleteQuiz);
 import questionController from "../controllers/questionController.js";
 
 router.post(

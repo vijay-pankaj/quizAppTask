@@ -13,8 +13,42 @@ const findStudentByUserId = async (userId) => {
   });
 
 };
+const updateStudent = async (id, data) => {
 
+  const student = await models.Student.findOne({
+    where: {
+      id,
+      is_deleted: false
+    }
+  });
+
+  if (!student) return null;
+
+  await student.update(data);
+
+  return student;
+};
+
+const deleteStudent = async (id) => {
+
+  const student = await models.Student.findOne({
+    where: {
+      id,
+      is_deleted: false
+    }
+  });
+
+  if (!student) return null;
+
+  await student.update({
+    is_deleted: true
+  });
+
+  return student;
+};
 export default {
   createStudent,
-  findStudentByUserId
+  findStudentByUserId,
+  updateStudent,
+  deleteStudent
 };

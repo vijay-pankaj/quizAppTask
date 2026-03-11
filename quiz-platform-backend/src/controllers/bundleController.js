@@ -1,5 +1,5 @@
-import bundleService from "../services/bundleService.js";
 import models from "../../models/index.js";
+import bundleService from "../services/bundleService.js";
 
 const createBundle = async (req, res) => {
 
@@ -61,7 +61,62 @@ const getBundles = async (req, res) => {
 
 };
 
+const updateBundle = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = req.body;
+
+    const bundle = await bundleService.updateBundle(id, data);
+
+    if (!bundle) {
+      return res.status(404).json({
+        success: false,
+        message: "Bundle not found"
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Bundle updated successfully",
+      data: bundle
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+const deleteBundle = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const bundle = await bundleService.deleteBundle(id);
+
+    if (!bundle) {
+      return res.status(404).json({
+        success: false,
+        message: "Bundle not found"
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Bundle deleted successfully"
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 export default {
   createBundle,
-  getBundles
+  getBundles,
+  updateBundle,
+  deleteBundle
 };

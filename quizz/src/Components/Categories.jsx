@@ -85,7 +85,10 @@ export default function Categories() {
     try {
       const payload = { title: form.name, description: form.description };
       if (editId) {
-        await axios.put(`${CATEGORIES_URL}/${editId}`, payload);
+              const token = localStorage.getItem("token")
+        await axios.put(`${CATEGORIES_URL}/${editId}`, payload,{headers:{
+          Authorization:`bearer ${token}`
+        }});
       } else {
         const token = localStorage.getItem("token")
         await axios.post(CATEGORIES_URL, payload,{headers:{
@@ -107,7 +110,11 @@ export default function Categories() {
     setError(null);
     try {
       const targetId = deleteTarget.id ?? deleteTarget._id;
-      await axios.delete(`${CATEGORIES_URL}/${targetId}`);
+              const token = localStorage.getItem("token")
+
+      await axios.delete(`${CATEGORIES_URL}/${targetId}`,{headers:{
+          Authorization:`bearer ${token}`
+        }});
       setDeleteTarget(null);
       const targetPage =
         categories.length === 1 && currentPage > 1

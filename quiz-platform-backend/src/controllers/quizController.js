@@ -58,8 +58,60 @@ const getQuizzes = async (req, res) => {
   }
 
 };
+const updateQuiz = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = req.body;
 
+    const quiz = await quizService.updateQuiz(id, data);
+
+    if (!quiz) {
+      return res.status(404).json({
+        success: false,
+        message: "Quiz not found"
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Quiz updated successfully",
+      data: quiz
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+const deleteQuiz = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const quiz = await quizService.deleteQuiz(id);
+
+    if (!quiz) {
+      return res.status(404).json({
+        success: false,
+        message: "Quiz not found"
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Quiz deleted successfully"
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
 export default {
   createQuiz,
-  getQuizzes
+  getQuizzes,
+  updateQuiz,deleteQuiz
 };
