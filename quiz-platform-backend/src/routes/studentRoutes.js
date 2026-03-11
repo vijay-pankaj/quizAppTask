@@ -17,4 +17,11 @@ router.post(
   roleMiddleware(3),
   studentController.startQuiz
 );
+router.get(
+  "/bundle/:id/quizzes",
+  authMiddleware,
+  roleMiddleware(3),
+  studentController.getQuestions
+);
+
 export default router;
