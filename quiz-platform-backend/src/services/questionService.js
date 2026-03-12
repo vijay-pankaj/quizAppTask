@@ -37,8 +37,11 @@ const createQuestion = async (data, quizId) => {
 
 
 const getQuestions = async (quizId) => {
+const questions = await questionRepo.getQuestions(quizId);
 
-  return await questionRepo.getQuestions(quizId);
+  return {
+    data: questions
+  };
 
 };
 

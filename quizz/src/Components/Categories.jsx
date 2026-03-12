@@ -38,6 +38,7 @@ export default function Categories() {
   } = usePagination(CATEGORIES_URL, { itemsPerPage: 6 });
   console.log("categories",categories);
   console.log("totalPages",totalPages);
+  console.log("currentPage",currentPage);
 
   // Fetch on page or debounced-search change
   useEffect(() => {
@@ -116,9 +117,9 @@ export default function Categories() {
       setDeleteTarget(null);
       // If we deleted the last item on this page, go back one page
       const targetPage =
-        categories.bundles.length === 1 && categories.currentPage > 1
-          ? categories.currentPage - 1
-          : categories.currentPage;
+        categories.length === 1 && currentPage > 1
+          ? currentPage - 1
+          : currentPage;
 
       goToPage(targetPage)
       fetchData({ page: targetPage, search: debouncedSearch });
@@ -205,7 +206,7 @@ export default function Categories() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {categories.bundles.map((cat) => (
+            {categories.map((cat) => (
               <div
                 key={getCatId(cat)}
                 onClick={() => navigate(`/categories/${getCatId(cat)}/sets`)}
@@ -273,7 +274,7 @@ export default function Categories() {
         )}
 
         {/* Pagination */}
-        {categories.totalPages > 1 && (
+        {totalPages > 1 && (
           <div className="flex items-center justify-center gap-1.5 mt-8 flex-wrap">
             <button
               onClick={() => goToPage(categories.currentPage - 1)}
@@ -306,9 +307,9 @@ export default function Categories() {
             )}
 
             <button
-              onClick={() => goToPage(categories.currentPage + 1)}
+              onClick={() => goToPage(currentPage + 1)}
               // disabled={!hasNext || loading}
-              disabled={categories.currentPage === categories.totalPages}
+              disabled={currentPage === totalPages}
               className={`px-3 py-2 rounded-xl text-sm font-semibold border ${t.border} ${t.bgCard} ${t.textSecondary} disabled:opacity-40 ${t.bgCardHover} transition-all`}
             >
               Next →
@@ -318,7 +319,7 @@ export default function Categories() {
 
         {categories.totalPages > 1 && (
           <p className={`text-center text-xs ${t.textMuted} mt-3`}>
-            Page {categories.currentPage} of {categories.totalPages} · {categories.totalItems} total
+            Page {currentPage} of {totalPages} · {totalItems} total
           </p>
         )}
       </div>

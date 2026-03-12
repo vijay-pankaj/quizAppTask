@@ -41,6 +41,9 @@ export default function Set() {
     goToPage,
   } = usePagination(`${SETS_URL}/quizzes/${categoryId}`, { itemsPerPage: 6 });
   // ── Fetch parent category 
+  console.log("sets",sets);
+  console.log("sets currentPage",currentPage);
+  console.log("sets totalPages",totalPages);
   useEffect(() => {
     const fetchCategory = async () => {
       try {

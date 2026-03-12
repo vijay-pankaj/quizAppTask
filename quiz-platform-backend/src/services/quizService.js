@@ -31,7 +31,6 @@ const createQuiz = async (data, bundleId) => {
 };
 
 
-
 const getQuizzes = async (query, bundleId) => {
 
   const page = parseInt(query.page) || 1;
@@ -40,12 +39,21 @@ const getQuizzes = async (query, bundleId) => {
 
   const result = await quizRepo.getQuizzes(bundleId, page, limit, search);
 
+  // return {
+  //   totalRecords: result.count,
+  //   totalPages: Math.ceil(result.count / limit),
+  //   currentPage: page,
+  //   quizzes: result.rows
+  // };
+
   return {
+  data: {
     totalRecords: result.count,
     totalPages: Math.ceil(result.count / limit),
     currentPage: page,
     quizzes: result.rows
-  };
+  }
+};
 
 };
 const updateQuiz = async (id, data) => {
