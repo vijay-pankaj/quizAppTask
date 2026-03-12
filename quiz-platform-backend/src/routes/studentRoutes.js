@@ -15,5 +15,6 @@ router.get("/bundle/:id/quizzes",     authMiddleware, roleMiddleware(3), student
 router.get("/result/:id",             authMiddleware, roleMiddleware(3), studentController.getResult);
 router.put("/admin/student/:id",authMiddleware, studentController.updateStudent);
 router.delete("/admin/student/:id",authMiddleware, studentController.deleteStudent);
-
+router.get("/attempt-history", authMiddleware, studentController.getAttemptHistory);
+router.get("/quiz/:quizId/leaderboard", studentController.leaderboard);
 export default router;
