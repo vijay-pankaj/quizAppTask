@@ -228,6 +228,7 @@ export default function AdminPage() {
   const [viewClient,   setViewClient]   = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
+  console.log("clients",clients);
  
   const fetchClients = useCallback(async () => {
     setLoading(true);

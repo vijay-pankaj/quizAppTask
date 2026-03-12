@@ -34,7 +34,7 @@ const createBundle = async (data, clientId) => {
 const getBundles = async (query) => {
 
   const page = parseInt(query.page) || 1;
-  const limit = parseInt(query.limit) || 10;
+  const limit = parseInt(query.limit) || 6;
   const search = query.search || "";
 
   const result = await bundleRepo.getBundles(page, limit, search);
