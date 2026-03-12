@@ -36,7 +36,8 @@ const usePagination = (url, { itemsPerPage = 6 } = {}) => {
         },
       });
 
-      const d = res.data;
+      const d = res.data.data ?? res.data
+      // const d = res.data
 
       // Extract rows — handles { bundles: [...] }, { data: [...] }, { rows: [...] }
       const rows =

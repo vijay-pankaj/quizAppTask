@@ -54,6 +54,8 @@ export default function Quiz() {
     goToPage,
   } = usePagination(`${QUIZ_URL}/${setId}`, { itemsPerPage: 6 });
 
+  console.log("questions",questions);
+
   // ── Fetch parent set
   useEffect(() => {
     const fetchSet = async () => {
@@ -279,7 +281,7 @@ export default function Quiz() {
           <div className="flex flex-col gap-4">
             {questions.map((q, index) => (
               <div
-                key={q._id}
+                key={q.id}
                 className={`${t.bgCard} border ${t.border} rounded-2xl p-5 shadow-sm hover:shadow-md transition-all`}
               >
                 {/* Question header */}
