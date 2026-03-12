@@ -39,8 +39,8 @@ export default  {
 
       deletedAt: {
         type: Sequelize.DATE
-      }
-
+      },
+      
     });
 
   },

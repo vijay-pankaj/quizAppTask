@@ -16,9 +16,11 @@ router.get(
   authMiddleware,
   roleMiddleware(1),
   adminController.getAllClient)
-router.get(
-  '/:id',
-  authMiddleware,
-  roleMiddleware(2),
-  adminController.getClientById)
+  router.get("/dashboard", adminController.dashboard);
+  router.get(
+    '/:id',
+    authMiddleware,
+    roleMiddleware(2),
+    adminController.getClientById)
+
 export default router;

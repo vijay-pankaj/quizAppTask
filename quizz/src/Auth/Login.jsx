@@ -33,7 +33,7 @@ const Login = () => {
 
       toast.success("Login successful! Welcome back 👋");
       if(res.data.user.role_id==1 ||res.data.user.role_id==2){
-        navigate("/admin")
+        navigate("/adminDashboard")
       }else {
         navigate('/')
       }

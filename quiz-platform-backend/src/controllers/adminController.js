@@ -78,8 +78,31 @@ const getClientById = async (req, res) => {
 
 };
 
+const dashboard = async (req, res) => {
+
+  try {
+
+    const data = await adminService.getDashboard();
+
+    res.json({
+      success: true,
+      data
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+
+  }
+
+};
+
 export default {
   createClient,
   getAllClient,
-  getClientById
+  getClientById,
+  dashboard
 };

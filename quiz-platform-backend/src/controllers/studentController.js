@@ -115,8 +115,37 @@ const deleteStudent = async (req, res) => {
     });
   }
 };
+const getAttemptHistory = async (req, res) => {
+  try {
+    const history = await studentService.getAttemptHistory(req.user.id);
+    res.status(200).json({ success: true, data: history });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+const leaderboard = async (req, res) => {
 
+  try {
 
+    const { quizId } = req.params;
+
+    const data = await studentService.leaderboard(quizId);
+
+    res.json({
+      success: true,
+      data
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+
+  }
+
+};
 export default {
   registerStudent,
   startQuiz,
@@ -124,5 +153,7 @@ export default {
   getQuestions,
   getResult,
   deleteStudent,
-  updateStudent
+  updateStudent,
+  getAttemptHistory,
+  leaderboard
 };

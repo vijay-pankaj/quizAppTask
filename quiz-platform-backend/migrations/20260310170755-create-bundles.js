@@ -42,8 +42,11 @@ export default  {
 
       deletedAt: {
         type: Sequelize.DATE
-      }
-
+      },
+      is_deleted: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
     });
 
   },

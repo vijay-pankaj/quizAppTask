@@ -20,6 +20,9 @@ import Admin from "./Components/AdminPage"
 
 import Protected from "./Auth/Protected"
 import AuthProtected from "./Auth/AuthProtected"
+import AttemptHistory from "./Components/Attempthistory";
+import Leaderboard from "./Components/Leaderboard";
+import AdminDashboard from "./Components/Admindashboard";
 
 function App() {
   
@@ -46,6 +49,9 @@ function App() {
                 <Route path="/result/:resultId"              element={<Result />} />
                 <Route path="/admin"                         element={<Admin />} />
                 <Route path="/StudentDashboard"              element={<StudentDashboard />} />
+                <Route path="/history"                       element={<AttemptHistory />} />
+                <Route path="/leaderboard/:quizId" element={<Leaderboard />} />                
+                <Route path="/adminDashboard" element={<AdminDashboard />} />                
               </Routes>
             </main>
             <Footer />

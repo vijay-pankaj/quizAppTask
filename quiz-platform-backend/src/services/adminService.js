@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import sequelize from "../config/sequelizeConfig.js";
 import clientRepo from "../repositories/clientRepo.js";
 import userRepo from "../repositories/userRepo.js";
+import dashboardRepo from "../repositories/dashboardRepo.js";
 
 const createClient = async (data) => {
 
@@ -43,6 +44,15 @@ const createClient = async (data) => {
 
 };
 
+const getDashboard = async () => {
+
+  const stats = await dashboardRepo.getDashboardStats();
+
+  return stats;
+
+};
+
 export default {
-  createClient
+  createClient,
+  getDashboard
 };
