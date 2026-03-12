@@ -5,7 +5,7 @@ import { API_BASE_URL } from "../config/api";
 import useDebounce from "../Hooks/useDebounce";
 import usePagination from "../Hooks/usePagination";
 import { useTheme } from "../Hooks/useTheame";
-
+const PARAM_URL = `${API_BASE_URL}/api/client`;
 const QUIZ_URL = `${API_BASE_URL}/api/client`;
 const SETS_URL = `${API_BASE_URL}/api/client/quizzes`;
 
@@ -38,6 +38,8 @@ export default function Quiz() {
   const [editId, setEditId]         = useState(null);
   const [showModal, setShowModal]   = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [details, setDetails]           = useState(null);
+  const [totalQuestions, setTotalQuestions]       = useState(0);
 
   const debouncedSearch = useDebounce(search, 500);
 
@@ -66,9 +68,31 @@ export default function Quiz() {
         setSet(null);
       }
     };
-    fetchSet();
-  }, [setId]);
+    const fetchDetails = async()=>{
+        try {
+         const detailRes = await axios.get(`${PARAM_URL}/quiz/${setId}`);
+        const quizInfo = detailRes.data?.data;
+        setDetails(quizInfo);
 
+      } catch {
+        setSet(null);
+      }
+    }
+    const totalCount = async()=>{
+        try {
+         const detailRes = await axios.get(`${PARAM_URL}/question/${setId}`);
+        const quizInfo = detailRes.data;
+        setTotalQuestions(quizInfo);
+
+      } catch {
+        setSet(null);
+      }
+    }
+    fetchSet();
+    fetchDetails()
+    totalCount()
+  }, [setId]);
+// console.log('details',totalQuestions.count)
   // ── Fetch questions 
   useEffect(() => {
     fetchData({ page: currentPage, search: debouncedSearch });
@@ -201,25 +225,22 @@ export default function Quiz() {
         </div>
 
         {/* Set info banner */}
-        {set && (
+        {details && (
           <div className={`${t.bgCard} border ${t.border} rounded-2xl px-5 py-4 mb-6 flex flex-wrap gap-4 items-center justify-between`}>
             <div>
               <p className={`text-xs font-bold uppercase tracking-widest ${t.textMuted} mb-0.5`}>Set</p>
-              <h2 className={`text-lg font-black ${t.text}`}>{set.title}</h2>
+              <h2 className={`text-lg font-black ${t.text}`}>{details.title}</h2>
             </div>
             <div className="flex gap-6">
               <div className="text-center">
                 <p className={`text-xs ${t.textMuted} mb-0.5`}>Duration</p>
-                <p className={`text-base font-bold ${t.text}`}>⏱ {set.duration} min</p>
+                <p className={`text-base font-bold ${t.text}`}>⏱ {details.duration} min</p>
               </div>
               <div className="text-center">
                 <p className={`text-xs ${t.textMuted} mb-0.5`}>Total Marks</p>
-                <p className={`text-base font-bold ${t.text}`}>🏆 {set.totalMarks}</p>
+                <p className={`text-base font-bold ${t.text}`}>🏆 {details.total_marks}</p>
               </div>
-              <div className="text-center">
-                <p className={`text-xs ${t.textMuted} mb-0.5`}>Questions</p>
-                <p className={`text-base font-bold ${t.text}`}>📝 {totalItems}</p>
-              </div>
+            
             </div>
           </div>
         )}
@@ -229,7 +250,7 @@ export default function Quiz() {
           <div>
             <h1 className={`text-3xl font-black ${t.text}`}>Questions</h1>
             <p className={`text-sm ${t.textMuted} mt-1`}>
-              {totalItems} {totalItems === 1 ? "question" : "questions"} total
+              {totalQuestions.count} {totalQuestions.count === 1 ? "question" : "questions"} total
             </p>
           </div>
           <button
