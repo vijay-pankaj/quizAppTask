@@ -53,4 +53,9 @@ router.get(
   // roleMiddleware(2),
   questionController.getQuestions
 );
+
+
+router.put("/client/question/:id", questionController.updateQuestion);
+router.delete("/client/question/:id", questionController.deleteQuestion);
+
 export default router;
