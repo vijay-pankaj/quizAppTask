@@ -6,7 +6,7 @@ import useDebounce from "../Hooks/useDebounce";
 import usePagination from "../Hooks/usePagination";
 import { useTheme } from "../Hooks/useTheame";
 
-const QUIZ_URL = `${API_BASE_URL}/api/client/question`;
+const QUIZ_URL = `${API_BASE_URL}/api/client`;
 const SETS_URL = `${API_BASE_URL}/api/client/quizzes`;
 
 const emptyForm = {
@@ -52,7 +52,7 @@ export default function Quiz() {
     hasNext,
     fetchData,
     goToPage,
-  } = usePagination(`${QUIZ_URL}/${setId}`, { itemsPerPage: 6 });
+  } = usePagination(`${QUIZ_URL}/question/${setId}`, { itemsPerPage: 6 });
 
   console.log("questions",questions);
 
@@ -135,9 +135,12 @@ export default function Quiz() {
       };
 
       if (editId) {
-        await axios.put(`${QUIZ_URL}/${editId}`, payload);
+        console.log(editId)
+        await axios.put(`${QUIZ_URL}/question/${editId}`, payload,{headers:{
+          Authorization:`Bearer ${localStorage.getItem('token')}`
+        }});
       } else {
-        await axios.post(`${QUIZ_URL}/${setId}`, { ...payload});
+        await axios.post(`${QUIZ_URL}/question/${setId}`, { ...payload});
       }
       closeModal();
       fetchData({ page: currentPage, search: debouncedSearch });
@@ -153,7 +156,9 @@ export default function Quiz() {
     setSubmitting(true);
     setError(null);
     try {
-      await axios.delete(`${QUIZ_URL}/${deleteTarget._id}`);
+      await axios.delete(`${QUIZ_URL}/question/${deleteTarget.id}`,{headers:{
+          Authorization:`Bearer ${localStorage.getItem('token')}`
+        }});
       setDeleteTarget(null);
       const targetPage =
         questions.length === 1 && currentPage > 1

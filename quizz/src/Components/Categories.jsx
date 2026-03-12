@@ -6,21 +6,31 @@ import useDebounce from "../Hooks/useDebounce";
 import usePagination from "../Hooks/usePagination";
 import { useTheme } from "../Hooks/useTheame";
 
-const CATEGORIES_URL = `${API_BASE_URL}/api/client/bundle`;
+// role 2 (client) → authenticated endpoint
+// role 1 (superadmin) & role 3 (student) → no-auth endpoint
+const CATEGORIES_URL_AUTH   = `${API_BASE_URL}/api/client/bundle`;
+const CATEGORIES_URL_NOAUTH = `${API_BASE_URL}/api/client/bundlesNoauth`;
+
 const emptyForm = { name: "", description: "" };
 
 export default function Categories() {
-  const { t } = useTheme();
-
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError]           = useState(null);
-  const [search, setSearch]         = useState("");
-  const [form, setForm]             = useState(emptyForm);
-  const [editId, setEditId]         = useState(null);
-  const [showModal, setShowModal]   = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState(null);
-  const [roleNum, setRoleNum]       = useState(null);
+  const { t }    = useTheme();
   const navigate = useNavigate();
+
+  // ── Read role synchronously — correct on first render, no useEffect needed
+  const roleNum       = Number(localStorage.getItem("role") ?? 0);
+  const categoriesUrl = roleNum === 2 ? CATEGORIES_URL_AUTH : CATEGORIES_URL_NOAUTH;
+
+  // Only role 2 (client) can create / edit / delete
+  const canManage = roleNum === 2;
+
+  const [submitting,   setSubmitting]   = useState(false);
+  const [error,        setError]        = useState(null);
+  const [search,       setSearch]       = useState("");
+  const [form,         setForm]         = useState(emptyForm);
+  const [editId,       setEditId]       = useState(null);
+  const [showModal,    setShowModal]    = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const debouncedSearch = useDebounce(search, 500);
 
@@ -32,14 +42,9 @@ export default function Categories() {
     totalItems,
     pageNumbers,
     hasPrev,
-    hasNext,
     fetchData,
     goToPage,
-  } = usePagination(CATEGORIES_URL, { itemsPerPage: 6 });
-  console.log("category totalItems",totalItems);
-  console.log("categories",categories);
-  console.log("totalPages",totalPages);
-  console.log("currentPage",currentPage);
+  } = usePagination(categoriesUrl, { itemsPerPage: 6 });
 
   // Fetch on page or debounced-search change
   useEffect(() => {
@@ -51,12 +56,6 @@ export default function Categories() {
     goToPage(1);
   }, [debouncedSearch]);
 
-  // Read role from localStorage once
-  useEffect(() => {
-    const role = localStorage.getItem("role");
-    setRoleNum(Number(role));
-  }, []);
-
   // ── Modal helpers ──────────────────────────────────────────────────────────
   const openCreate = () => {
     setForm(emptyForm);
@@ -66,7 +65,7 @@ export default function Categories() {
 
   const openEdit = (cat) => {
     setForm({
-      name: cat.title ?? cat.name ?? "",
+      name:        cat.title ?? cat.name ?? "",
       description: cat.description ?? "",
     });
     setEditId(cat.id ?? cat._id);
@@ -79,20 +78,20 @@ export default function Categories() {
     setForm(emptyForm);
   };
 
-  // ── Create / Update ────────────────────────────────────────────────────────
+  // ── Create / Update (always auth URL — only role 2 triggers this) ──────────
   const handleSubmit = async () => {
     if (!form.name.trim()) return;
     setSubmitting(true);
     setError(null);
     try {
-      const token = localStorage.getItem("token");
+      const token   = localStorage.getItem("token");
       const payload = { title: form.name, description: form.description };
       if (editId) {
-        await axios.put(`${CATEGORIES_URL}/${editId}`, payload, {
+        await axios.put(`${CATEGORIES_URL_AUTH}/${editId}`, payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
       } else {
-        await axios.post(CATEGORIES_URL, payload, {
+        await axios.post(CATEGORIES_URL_AUTH, payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
       }
@@ -105,24 +104,20 @@ export default function Categories() {
     }
   };
 
-  // ── Delete ─────────────────────────────────────────────────────────────────
+  // ── Delete (always auth URL — only role 2 triggers this) ──────────────────
   const confirmDelete = async () => {
     setSubmitting(true);
     setError(null);
     try {
       const token    = localStorage.getItem("token");
       const targetId = deleteTarget.id ?? deleteTarget._id;
-      await axios.delete(`${CATEGORIES_URL}/${targetId}`, {
+      await axios.delete(`${CATEGORIES_URL_AUTH}/${targetId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setDeleteTarget(null);
-      // If we deleted the last item on this page, go back one page
       const targetPage =
-        categories.length === 1 && currentPage > 1
-          ? currentPage - 1
-          : currentPage;
-
-      goToPage(targetPage)
+        categories.length === 1 && currentPage > 1 ? currentPage - 1 : currentPage;
+      goToPage(targetPage);
       fetchData({ page: targetPage, search: debouncedSearch });
     } catch (err) {
       setError(err.response?.data?.message || err.message);
@@ -131,7 +126,7 @@ export default function Categories() {
     }
   };
 
-  const getCatId   = (cat) => cat.id   ?? cat._id;
+  const getCatId   = (cat) => cat.id    ?? cat._id;
   const getCatName = (cat) => cat.title ?? cat.name ?? "";
 
   return (
@@ -146,7 +141,7 @@ export default function Categories() {
               {totalItems} {totalItems === 1 ? "category" : "categories"} total
             </p>
           </div>
-          {(roleNum === 1 || roleNum === 2) && (
+          {canManage && (
             <button
               onClick={openCreate}
               className={`${t.accentBg} ${t.accentBgHover} text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all`}
@@ -179,9 +174,7 @@ export default function Categories() {
           />
           {search !== debouncedSearch && (
             <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <div
-                className={`w-4 h-4 border-2 ${t.accentBorder} border-t-transparent rounded-full animate-spin`}
-              />
+              <div className={`w-4 h-4 border-2 ${t.accentBorder} border-t-transparent rounded-full animate-spin`} />
             </div>
           )}
         </div>
@@ -189,20 +182,18 @@ export default function Categories() {
         {/* Grid */}
         {loading ? (
           <div className="flex items-center justify-center py-24">
-            <div
-              className={`w-8 h-8 border-4 ${t.accentBorder} border-t-transparent rounded-full animate-spin`}
-            />
+            <div className={`w-8 h-8 border-4 ${t.accentBorder} border-t-transparent rounded-full animate-spin`} />
           </div>
         ) : categories.length === 0 ? (
-          <div
-            className={`flex flex-col items-center justify-center py-24 gap-3 ${t.textMuted}`}
-          >
+          <div className={`flex flex-col items-center justify-center py-24 gap-3 ${t.textMuted}`}>
             <span className="text-5xl">🗂️</span>
             <p className="font-semibold text-lg">No categories found</p>
             <p className="text-sm">
               {search
                 ? "Try a different search term"
-                : `Click "+ New Category" to get started`}
+                : canManage
+                  ? `Click "+ New Category" to get started`
+                  : "No categories available yet"}
             </p>
           </div>
         ) : (
@@ -220,7 +211,9 @@ export default function Categories() {
                   >
                     {getCatName(cat).charAt(0).toUpperCase()}
                   </div>
-                  {(roleNum === 1 || roleNum === 2) && (
+
+                  {/* Edit / Delete buttons — role 2 only */}
+                  {canManage && (
                     <div className="flex gap-1 shrink-0">
                       <button
                         onClick={(e) => { e.stopPropagation(); openEdit(cat); }}
@@ -245,27 +238,19 @@ export default function Categories() {
                   <h3 className={`font-bold text-base ${t.text} leading-tight`}>
                     {getCatName(cat)}
                   </h3>
-                  <p
-                    className={`text-sm ${t.textMuted} mt-1 line-clamp-2 leading-relaxed`}
-                  >
+                  <p className={`text-sm ${t.textMuted} mt-1 line-clamp-2 leading-relaxed`}>
                     {cat.description || "No description provided."}
                   </p>
                 </div>
 
                 {/* Card footer */}
-                <div
-                  className={`flex items-center justify-between pt-2 border-t ${t.borderSubtle}`}
-                >
+                <div className={`flex items-center justify-between pt-2 border-t ${t.borderSubtle}`}>
                   <span className={`text-xs ${t.textMuted}`}>
                     {new Date(cat.createdAt).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
+                      month: "short", day: "numeric", year: "numeric",
                     })}
                   </span>
-                  <span
-                    className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${t.badge}`}
-                  >
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${t.badge}`}>
                     Active
                   </span>
                 </div>
@@ -278,7 +263,7 @@ export default function Categories() {
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-1.5 mt-8 flex-wrap">
             <button
-              onClick={() => goToPage(categories.currentPage - 1)}
+              onClick={() => goToPage(currentPage - 1)}
               disabled={!hasPrev || loading}
               className={`px-3 py-2 rounded-xl text-sm font-semibold border ${t.border} ${t.bgCard} ${t.textSecondary} disabled:opacity-40 ${t.bgCardHover} transition-all`}
             >
@@ -287,19 +272,16 @@ export default function Categories() {
 
             {pageNumbers.map((p, i) =>
               p === "..." ? (
-                <span key={`dot-${i}`} className={`px-2 text-sm ${t.textMuted}`}>
-                  …
-                </span>
+                <span key={`dot-${i}`} className={`px-2 text-sm ${t.textMuted}`}>…</span>
               ) : (
                 <button
                   key={p}
                   onClick={() => goToPage(p)}
                   disabled={loading}
                   className={`w-9 h-9 rounded-xl text-sm font-bold border transition-all
-                    ${
-                      currentPage === p
-                        ? `${t.accentBg} text-white border-transparent shadow-md`
-                        : `${t.bgCard} ${t.border} ${t.textSecondary} ${t.bgCardHover}`
+                    ${currentPage === p
+                      ? `${t.accentBg} text-white border-transparent shadow-md`
+                      : `${t.bgCard} ${t.border} ${t.textSecondary} ${t.bgCardHover}`
                     }`}
                 >
                   {p}
@@ -309,8 +291,7 @@ export default function Categories() {
 
             <button
               onClick={() => goToPage(currentPage + 1)}
-              // disabled={!hasNext || loading}
-              disabled={currentPage === totalPages}
+              disabled={currentPage === totalPages || loading}
               className={`px-3 py-2 rounded-xl text-sm font-semibold border ${t.border} ${t.bgCard} ${t.textSecondary} disabled:opacity-40 ${t.bgCardHover} transition-all`}
             >
               Next →
@@ -318,23 +299,21 @@ export default function Categories() {
           </div>
         )}
 
-        {categories.totalPages > 1 && (
+        {totalPages > 1 && (
           <p className={`text-center text-xs ${t.textMuted} mt-3`}>
             Page {currentPage} of {totalPages} · {totalItems} total
           </p>
         )}
       </div>
 
-      {/* Create / Edit Modal */}
+      {/* ── Create / Edit Modal ── */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div
             className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
             onClick={closeModal}
           />
-          <div
-            className={`relative w-full max-w-md ${t.bgCard} border ${t.border} rounded-3xl p-7 shadow-2xl z-10`}
-          >
+          <div className={`relative w-full max-w-md ${t.bgCard} border ${t.border} rounded-3xl p-7 shadow-2xl z-10`}>
             <h2 className={`text-xl font-black ${t.text} mb-1`}>
               {editId ? "Edit Category" : "New Category"}
             </h2>
@@ -346,9 +325,7 @@ export default function Categories() {
 
             <div className="flex flex-col gap-5">
               <div>
-                <label
-                  className={`text-xs font-bold uppercase tracking-widest ${t.textMuted} mb-1.5 block`}
-                >
+                <label className={`text-xs font-bold uppercase tracking-widest ${t.textMuted} mb-1.5 block`}>
                   Name <span className="text-rose-400">*</span>
                 </label>
                 <input
@@ -359,16 +336,12 @@ export default function Categories() {
                 />
               </div>
               <div>
-                <label
-                  className={`text-xs font-bold uppercase tracking-widest ${t.textMuted} mb-1.5 block`}
-                >
+                <label className={`text-xs font-bold uppercase tracking-widest ${t.textMuted} mb-1.5 block`}>
                   Description
                 </label>
                 <textarea
                   value={form.description}
-                  onChange={(e) =>
-                    setForm({ ...form, description: e.target.value })
-                  }
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
                   placeholder="Brief description of this category…"
                   rows={3}
                   className={`w-full ${t.inputBg} border ${t.inputBorder} ${t.text} rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 ${t.inputFocus} transition placeholder:${t.textMuted} resize-none`}
@@ -395,26 +368,20 @@ export default function Categories() {
         </div>
       )}
 
-      {/* Delete Confirm Modal */}
+      {/* ── Delete Confirm Modal ── */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div
             className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
             onClick={() => setDeleteTarget(null)}
           />
-          <div
-            className={`relative w-full max-w-sm ${t.bgCard} border ${t.border} rounded-3xl p-7 shadow-2xl z-10 text-center`}
-          >
+          <div className={`relative w-full max-w-sm ${t.bgCard} border ${t.border} rounded-3xl p-7 shadow-2xl z-10 text-center`}>
             <div className="text-4xl mb-3">🗑️</div>
-            <h2 className={`text-xl font-black ${t.text} mb-2`}>
-              Delete Category?
-            </h2>
+            <h2 className={`text-xl font-black ${t.text} mb-2`}>Delete Category?</h2>
             <p className={`text-sm ${t.textMuted} mb-6`}>
               Are you sure you want to delete{" "}
-              <span className={`font-bold ${t.text}`}>
-                "{getCatName(deleteTarget)}"
-              </span>
-              ? This cannot be undone.
+              <span className={`font-bold ${t.text}`}>"{getCatName(deleteTarget)}"</span>?
+              This cannot be undone.
             </p>
             <div className="flex gap-3">
               <button

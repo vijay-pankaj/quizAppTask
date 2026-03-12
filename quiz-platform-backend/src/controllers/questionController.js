@@ -65,6 +65,7 @@ const updateQuestion = async (req, res) => {
   try {
 
     const questionId = req.params.id;
+    console.log(questionId)
     const clientId = req.user.id;
     const data = req.body;
 

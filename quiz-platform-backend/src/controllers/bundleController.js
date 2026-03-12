@@ -43,7 +43,18 @@ const getBundles = async (req, res) => {
 
   try {
 
-    const bundles = await bundleService.getBundles(req.query);
+    const client = await models.Client.findOne({
+      where: { user_id: req.user.id }
+    });
+
+    if (!client) {
+      return res.status(404).json({
+        success: false,
+        message: "Client not found"
+      });
+    }
+
+    const bundles = await bundleService.getBundles(req.query, client.id);
 
     return res.status(200).json({
       success: true,
@@ -61,6 +72,27 @@ const getBundles = async (req, res) => {
 
 };
 
+const getBundlesWithoutAuth = async (req, res) => {
+
+  try {
+
+    const bundles = await bundleService.getBundlesWithoutAuth(req.query);
+
+    return res.status(200).json({
+      success: true,
+      data: bundles
+    });
+
+  } catch (error) {
+
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+
+  }
+
+};
 const updateBundle = async (req, res) => {
   try {
     const { id } = req.params;
@@ -118,5 +150,6 @@ export default {
   createBundle,
   getBundles,
   updateBundle,
-  deleteBundle
+  deleteBundle,
+  getBundlesWithoutAuth
 };

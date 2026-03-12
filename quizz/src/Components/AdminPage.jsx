@@ -265,13 +265,16 @@ console.log(clients.data)
       setSubmitting(false);
     }
   };
+  console.log("editClient",editClient)
 
   //UPDATE
   const handleEdit = async (form) => {
     setSubmitting(true);
     try {
+      
       const token = localStorage.getItem("token");
-      const id = editClient._id || editClient.id;
+      const id = editClient.clientId || editClient.id;
+      console.log(id)
       await axios.put(`${BASE}/admin/admin/client/${id}`, form, {
         headers: { authorization: `Bearer ${token}` }
       });
@@ -290,8 +293,8 @@ console.log(clients.data)
     setSubmitting(true);
     try {
       const token = localStorage.getItem("token");
-      const id = deleteTarget._id || deleteTarget.id;
-      await axios.delete(`${BASE}/${id}`, {
+      const id = deleteTarget.clientId || deleteTarget.id;
+      await axios.delete(`${BASE}/admin/admin/client/${id}`, {
          headers: { authorization: `Bearer ${token}` }
       });
       toast.success(`${deleteTarget.name} removed`);

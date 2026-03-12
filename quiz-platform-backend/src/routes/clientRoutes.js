@@ -1,5 +1,7 @@
 import express from "express";
 import bundleController from "../controllers/bundleController.js";
+import questionController from "../controllers/questionController.js";
+import quizController from "../controllers/quizController.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import roleMiddleware from "../middlewares/roleMiddleware.js";
 
@@ -15,13 +17,12 @@ router.post(
 router.get(
   "/bundle",
   authMiddleware,
-  // roleMiddleware(2,3),
+  // roleMiddleware(2),
   bundleController.getBundles
 );
 router.put("/bundle/:id",authMiddleware, bundleController.updateBundle);
 router.delete("/bundle/:id",authMiddleware, bundleController.deleteBundle);
-
-import quizController from "../controllers/quizController.js";
+router.get("/bundlesNoauth", bundleController.getBundlesWithoutAuth);
 
 router.post(
   "/quiz1",
@@ -38,7 +39,6 @@ router.get(
 );
 router.put("/client/quiz/:id",authMiddleware, quizController.updateQuiz);
 router.delete("/admin/quiz/:id",authMiddleware, quizController.deleteQuiz);
-import questionController from "../controllers/questionController.js";
 
 router.post(
   "/question/:id",
@@ -55,7 +55,7 @@ router.get(
 );
 
 
-router.put("/client/question/:id", questionController.updateQuestion);
-router.delete("/client/question/:id", questionController.deleteQuestion);
+router.put("/question/:id",authMiddleware, questionController.updateQuestion);
+router.delete("/question/:id",authMiddleware, questionController.deleteQuestion);
 
 export default router;

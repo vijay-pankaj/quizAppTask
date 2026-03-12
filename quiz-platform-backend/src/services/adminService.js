@@ -1,4 +1,5 @@
 import bcrypt from "bcrypt";
+import models from "../../models/index.js";
 import sequelize from "../config/sequelizeConfig.js";
 import clientRepo from "../repositories/clientRepo.js";
 import dashboardRepo from "../repositories/dashboardRepo.js";
@@ -105,24 +106,34 @@ const updateClient = async (clientId, data) => {
 
     if (!client) throw new Error("Client not found");
 
-    await client.update({
-      name: data.name,
-      email: data.email
-    }, { transaction });
+    const user = await models.User.findByPk(client.user_id, { transaction });
 
-    await sendEmail(
-      client.email,
-      "Client Profile Updated",
-      `
-      <h2>Profile Updated</h2>
-      <p>Hello ${client.name},</p>
-      <p>Your client account has been updated by the admin.</p>
-      `
+    if (!user) throw new Error("User not found");
+
+    // update client table
+    await client.update(
+      {
+        company_name: data.company_name,
+        contact_number: data.contact_number
+      },
+      { transaction }
+    );
+
+    // update user table
+    await user.update(
+      {
+        name: data.name,
+        email: data.email
+      },
+      { transaction }
     );
 
     await transaction.commit();
 
-    return client;
+    return {
+      client,
+      user
+    };
 
   } catch (error) {
 
@@ -142,20 +153,15 @@ const deleteClient = async (clientId) => {
 
     if (!client) throw new Error("Client not found");
 
-    const email = client.email;
-    const name = client.name;
+    const user = await models.User.findByPk(client.user_id, { transaction });
 
+    if (!user) throw new Error("User not found");
+
+    // soft delete client
     await client.destroy({ transaction });
 
-    await sendEmail(
-      email,
-      "Client Account Deleted",
-      `
-      <h2>Account Removed</h2>
-      <p>Hello ${name},</p>
-      <p>Your client account has been removed by admin.</p>
-      `
-    );
+    // optional: soft delete user as well
+    await user.destroy({ transaction });
 
     await transaction.commit();
 
