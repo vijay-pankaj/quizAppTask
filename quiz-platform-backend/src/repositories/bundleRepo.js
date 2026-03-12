@@ -7,18 +7,40 @@ const createBundle = async (data, transaction = null) => {
 
 };
 
-const getBundles = async (page = 1, limit = 6, search = null) => {
+const getBundles = async (page = 1, limit = 6, search = null, id) => {
 
   const offset = (page - 1) * limit;
 
-  const where = {is_deleted:false};
+  const where = {
+    client_id: id
+  };
 
   if (search) {
-
     where.title = {
       [Op.like]: `%${search}%`
     };
+  }
 
+  const result = await models.Bundle.findAndCountAll({
+    where,
+    limit,
+    offset,
+    order: [["createdAt", "DESC"]]
+  });
+
+  return result;
+
+};
+const getBundlesWithoutAuth = async (page = 1, limit = 6, search = null) => {
+
+  const offset = (page - 1) * limit;
+
+  const where = {};
+
+  if (search) {
+    where.title = {
+      [Op.like]: `%${search}%`
+    };
   }
 
   const result = await models.Bundle.findAndCountAll({
@@ -68,5 +90,6 @@ export default {
   createBundle,
   getBundles,
   updateBundle,
-  deleteBundle
+  deleteBundle,
+  getBundlesWithoutAuth
 };

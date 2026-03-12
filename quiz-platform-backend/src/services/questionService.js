@@ -1,3 +1,4 @@
+import models from "../../models/index.js";
 import sequelize from "../config/sequelizeConfig.js";
 import questionRepo from "../repositories/questionRepo.js";
 
@@ -53,7 +54,6 @@ const updateQuestion = async (clientId, questionId, data) => {
     const question = await models.Question.findOne({
       where: {
         id: questionId,
-        client_id: clientId
       },
       transaction
     });
@@ -92,7 +92,6 @@ const deleteQuestion = async (clientId, questionId) => {
     const question = await models.Question.findOne({
       where: {
         id: questionId,
-        client_id: clientId
       },
       transaction
     });

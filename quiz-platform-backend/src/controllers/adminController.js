@@ -114,7 +114,7 @@ const updateClient = async (req, res) => {
     const clientId = req.params.id;
     const data = req.body;
 
-    const client = await clientService.updateClient(clientId, data);
+    const client = await adminService.updateClient(clientId, data);
 
     res.status(200).json({
       success: true,
@@ -137,7 +137,7 @@ const deleteClient = async (req, res) => {
 
     const clientId = req.params.id;
 
-    const result = await clientService.deleteClient(clientId);
+    const result = await adminService.deleteClient(clientId);
 
     res.status(200).json({
       success: true,

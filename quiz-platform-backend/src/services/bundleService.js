@@ -31,13 +31,13 @@ const createBundle = async (data, clientId) => {
 
 
 
-const getBundles = async (query) => {
+const getBundles = async (query, id) => {
 
   const page = parseInt(query.page) || 1;
   const limit = parseInt(query.limit) || 6;
   const search = query.search || "";
 
-  const result = await bundleRepo.getBundles(page, limit, search);
+  const result = await bundleRepo.getBundles(page, limit, search, id);
 
   return {
     totalRecords: result.count,
@@ -47,7 +47,22 @@ const getBundles = async (query) => {
   };
 
 };
+const getBundlesWithoutAuth = async (query) => {
 
+  const page = parseInt(query.page) || 1;
+  const limit = parseInt(query.limit) || 6;
+  const search = query.search || "";
+
+  const result = await bundleRepo.getBundlesWithoutAuth(page, limit, search);
+
+  return {
+    totalRecords: result.count,
+    totalPages: Math.ceil(result.count / limit),
+    currentPage: page,
+    bundles: result.rows
+  };
+
+};
 const updateBundle = async (id, data) => {
   return await bundleRepo.updateBundle(id, data);
 };
@@ -57,5 +72,6 @@ const deleteBundle = async (id) => {
 export default {
   createBundle,
   getBundles,updateBundle,
-  deleteBundle
+  deleteBundle,
+  getBundlesWithoutAuth
 };
