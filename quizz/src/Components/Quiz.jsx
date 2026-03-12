@@ -98,7 +98,8 @@ export default function Quiz() {
       correct_answer: q.correct_answer,
       marks:          q.marks,
     });
-    setEditId(q._id);
+    setEditId(q.id);
+    console.log("editqueId",q.id);
     setShowModal(true);
   };
 
