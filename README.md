@@ -146,11 +146,15 @@ PASSWORD=your_email_password
 
 ---
 
-# 👨‍💻 Author
+# 👨‍💻 Authors
 
-**Vijay Pankaj**
+### Vijay Pankaj
 
-B.Tech CSE
-University College of Engineering and Technology, Bikaner
+* B.Tech in Computer Science and Engineering
+* University College of Engineering and Technology, Bikaner
 
----
+### Kaushal Kumar
+
+* Master of Computer Applications (MCA)
+* National Institute of Technology, Suratkal
+
