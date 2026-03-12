@@ -8,7 +8,7 @@ import { useTheme } from "../Hooks/useTheame";
 
 const SETS_URL       = `${API_BASE_URL}/api/client`;
 const CATEGORIES_URL = `${API_BASE_URL}/api/client`;
-const emptyForm      = { title: "", duration: "", totalMarks: "" };
+const emptyForm      = { title: "", duration: "", total_marks: "" };
 
 export default function Set() {
   const { categoryId } = useParams();
@@ -84,7 +84,11 @@ export default function Set() {
     setForm({
       title:      set.title,
       duration:   set.duration,
-      totalMarks: set.total_marks,
+// <<<<<<< v
+//       totalMarks: set.total_marks,
+// =======
+      total_marks: set.total_marks,
+// >>>>>>> main
     });
     setEditId(set.id);
     setShowModal(true);
@@ -103,7 +107,7 @@ export default function Set() {
   const isValid =
     form.title.trim() &&
     Number(form.duration) > 0 &&
-    Number(form.totalMarks) > 0;
+    Number(form.total_marks) > 0;
 
     console.log(editId)
   // ── Create / Update 
@@ -115,7 +119,7 @@ export default function Set() {
       const payload = {
         title:      form.title.trim(),
         duration:   Number(form.duration),
-        totalMarks: Number(form.totalMarks),
+        total_marks: Number(form.total_marks),
       };
       if (editId) {
         await axios.put(`${SETS_URL}/client/quiz/${editId}`, payload,{headers:{
@@ -429,10 +433,10 @@ console.log(sets.quizzes)
                     Total Marks <span className="text-rose-400">*</span>
                   </label>
                   <input
-                    name="totalMarks"
+                    name="total_marks"
                     type="number"
                     min="1"
-                    value={form.totalMarks}
+                    value={form.total_marks}
                     onChange={handleChange}
                     placeholder="e.g. 100"
                     className={`w-full ${t.inputBg} border ${t.inputBorder} ${t.text} rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 ${t.inputFocus} transition placeholder:${t.textMuted}`}

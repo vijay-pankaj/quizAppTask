@@ -33,7 +33,21 @@ const createQuiz = async (req, res) => {
   }
 
 };
-
+const getQuizzesBybundleId = async(req,res)=>{
+  try {
+      const {id} = req.params
+const quiz = await quizService.getQuizzesBybundleId(id)
+ return res.status(201).json({
+      success: true,
+      data: quiz
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
 
 const getQuizzes = async (req, res) => {
 
@@ -113,5 +127,6 @@ const deleteQuiz = async (req, res) => {
 export default {
   createQuiz,
   getQuizzes,
-  updateQuiz,deleteQuiz
+  updateQuiz,deleteQuiz,
+  getQuizzesBybundleId
 };

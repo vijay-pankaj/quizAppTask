@@ -29,6 +29,12 @@ const createQuiz = async (data, bundleId) => {
 
 };
 
+// <<<<<<< v
+// =======
+// const getQuizzesBybundleId = async (id)=>{
+//   return quizRepo.getQuizzesBybundleId(id)
+// }
+// >>>>>>> main
 const getQuizzes = async (query, bundleId) => {
 
   const page = parseInt(query.page) || 1;
@@ -55,7 +61,11 @@ const getQuizzes = async (query, bundleId) => {
 
 };
 const updateQuiz = async (id, data) => {
-  console.log(data);
+// <<<<<<< v
+//   console.log(data);
+// =======
+//   console.log(data)
+// >>>>>>> main
   return await quizRepo.updateQuiz(id, data);
 };
 const deleteQuiz = async (id) => {
@@ -64,5 +74,6 @@ const deleteQuiz = async (id) => {
 export default {
   createQuiz,
   getQuizzes,
-  updateQuiz,deleteQuiz
+  updateQuiz,deleteQuiz,
+  getQuizzesBybundleId
 };

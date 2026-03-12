@@ -37,6 +37,8 @@ router.get(
   // roleMiddleware(2),
   quizController.getQuizzes
 );
+router.get("/quiz/:id",quizController.getQuizzesBybundleId)
+router.get("/question/:id",questionController.countQuestions)
 router.put("/client/quiz/:id",authMiddleware, quizController.updateQuiz);
 router.delete("/admin/quiz/:id",authMiddleware, quizController.deleteQuiz);
 

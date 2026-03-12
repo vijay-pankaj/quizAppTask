@@ -91,7 +91,21 @@ const updateQuestion = async (req, res) => {
   }
 
 };
-
+const countQuestions = async(req,res)=>{
+  try {
+    const {id} = req.params
+    console.log(id)
+    const totalQuestions = await models.Question.findAndCountAll({where:{
+      quiz_id :id
+    }})
+      res.json(totalQuestions);  
+  } catch (error) {
+     res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
 const deleteQuestion = async (req, res) => {
 
   try {
@@ -123,5 +137,6 @@ export default {
   createQuestion,
   getQuestions,
   updateQuestion,
-  deleteQuestion
+  deleteQuestion,
+  countQuestions
 };
