@@ -278,7 +278,7 @@ export default function Leaderboard() {
     <div className={`min-h-screen ${t.bg}`} style={{ fontFamily: "'Segoe UI', sans-serif" }}>
 
       {/* ── Dark navy header ── */}
-      <div style={{ background: "linear-gradient(135deg, #8d86ee 0%, #5652b4 60%, #4a6cc9 100%)" }}>
+      <div style={{ background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #1d4ed8 100%)" }}>
         <div className="max-w-2xl mx-auto px-4 pt-8 pb-0">
 
           {/* Nav */}

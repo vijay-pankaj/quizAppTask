@@ -1,5 +1,5 @@
-import adminService from "../services/adminService.js";
 import models from "../../models/index.js";
+import adminService from "../services/adminService.js";
 
 const createClient = async (req, res) => {
 
@@ -25,27 +25,36 @@ const createClient = async (req, res) => {
 
 
 const getAllClient = async (req, res) => {
-
   try {
+    const clients = await models.Client.findAll({
+      include: [{
+        model: models.User,
+        as: 'users', 
+        attributes: ['id', 'name', 'email']
+      }]
+    });
 
-    const clients = await models.Client.findAll();
-
+    const formattedData = clients.map(client => ({
+      clientId: client.id,
+      companyName: client.company_name,
+      contactNumber: client.contact_number,
+      name: client.users?.name, 
+      email: client.users?.email,
+      userId: client.users?.id
+    }));
+    console.log(formattedData)
     return res.status(200).json({
       success: true,
-      data: clients
+      data: formattedData
     });
 
   } catch (error) {
-
     return res.status(500).json({
       success: false,
       message: error.message
     });
-
   }
-
 };
-
 
 const getClientById = async (req, res) => {
 

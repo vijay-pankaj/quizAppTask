@@ -24,12 +24,13 @@ const normalise = (a) => {
   const pct        = a.percentage  ??
     (totalMarks > 0 ? Math.round((scored / totalMarks) * 100) : 0);
   return {
-    id:          a.attempt_id ?? a.id ?? a._id,
-    quizTitle:   a.quiz_title  ?? a.quizTitle  ?? "Quiz",
-    bundleTitle: a.bundle_title ?? "",
-    correct:     a.correct_answers ?? a.correct ?? 0,
-    wrong:       a.wrong_answers   ?? a.wrong   ?? 0,
-    skipped:     a.skipped         ?? 0,
+    id:            a.attempt_id ?? a.id ?? a._id,
+    quizId:        a.quiz_id ?? a.quizId ?? a.quiz ?? null, // Extracted for Leaderboard routing
+    quizTitle:     a.quiz_title  ?? a.quizTitle  ?? "Quiz",
+    bundleTitle:   a.bundle_title ?? "",
+    correct:       a.correct_answers ?? a.correct ?? 0,
+    wrong:         a.wrong_answers   ?? a.wrong   ?? 0,
+    skipped:       a.skipped         ?? 0,
     totalMarks,
     scored,
     pct,
@@ -48,10 +49,10 @@ const accuracy = (correct, wrong) => {
 // ─── Top summary strip ────────────────────────────────────────────────────────
 function SummaryStrip({ attempts }) {
   if (!attempts.length) return null;
-  const avg     = Math.round(attempts.reduce((s, a) => s + a.pct, 0) / attempts.length);
-  const best    = Math.max(...attempts.map(a => a.pct));
-  const passed  = attempts.filter(a => a.pct >= 50).length;
-  const avgAcc  = Math.round(
+  const avg    = Math.round(attempts.reduce((s, a) => s + a.pct, 0) / attempts.length);
+  const best   = Math.max(...attempts.map(a => a.pct));
+  const passed = attempts.filter(a => a.pct >= 50).length;
+  const avgAcc = Math.round(
     attempts.reduce((s, a) => s + accuracy(a.correct, a.wrong), 0) / attempts.length
   );
 
@@ -110,7 +111,7 @@ function AccuracyBar({ correct, wrong, skipped }) {
 }
 
 // ─── Attempt Card (Testbook style) ────────────────────────────────────────────
-function AttemptCard({ attempt, index, onView }) {
+function AttemptCard({ attempt, index, onView, onLeaderboard }) {
   const passed   = attempt.pct >= 50;
   const acc      = accuracy(attempt.correct, attempt.wrong);
   const isPending = !attempt.submittedAt;
@@ -204,20 +205,20 @@ function AttemptCard({ attempt, index, onView }) {
             onClick={() => onView(attempt.id)}
             className="flex-1 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold py-2.5 rounded-xl transition-colors"
           >
-            View Solutions
-          </button>
-          <button
-            onClick={() => onView(attempt.id)}
-            className="flex-1 bg-white hover:bg-slate-50 text-teal-700 border border-teal-200 text-xs font-bold py-2.5 rounded-xl transition-colors"
-          >
             Analysis
+          </button>
+          
+          <button
+            onClick={() => onLeaderboard(attempt.quizId)}
+            className="flex-1 flex items-center justify-center gap-1 bg-white hover:bg-amber-50 text-amber-600 border border-amber-200 text-xs font-bold py-2.5 rounded-xl transition-colors"
+          >
+            <span>🏆</span> Leaderboard
           </button>
         </div>
       </div>
     </div>
   );
 }
-
 // ─── Tab bar ──────────────────────────────────────────────────────────────────
 function TabBar({ active, onChange, counts }) {
   const tabs = [
@@ -280,6 +281,7 @@ export default function AttemptHistory() {
     };
     load();
   }, []);
+console.log(attempts)
 
   // derived
   const counts = {
@@ -444,6 +446,7 @@ export default function AttemptHistory() {
                     attempt={attempt}
                     index={i}
                     onView={(id) => navigate(`/result/${id}`)}
+                    onLeaderboard={(quizId) => navigate(`/leaderboard/${quizId}`)}
                   />
                 ))}
               </div>

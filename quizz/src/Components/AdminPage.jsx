@@ -228,8 +228,7 @@ export default function AdminPage() {
   const [viewClient,   setViewClient]   = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
-  console.log("clients",clients);
- 
+  
   const fetchClients = useCallback(async () => {
     setLoading(true);
     try {
@@ -244,7 +243,8 @@ export default function AdminPage() {
       setLoading(false);
     }
   }, []);
-
+  
+  console.log("clients",clients);
   useEffect(() => { fetchClients(); }, [fetchClients]);
 console.log(clients.data)
   //CREATE
@@ -334,7 +334,7 @@ console.log(clients.data)
 
   const cols = [
     { label: "Client",  key: "name" },
-    { label: "Company", key: "company_name" },
+    { label: "Company", key: "companyName" },
     { label: "Email",   key: "email" },
     { label: "Phone",   key: null },
     { label: "Joined",  key: "createdAt" },
