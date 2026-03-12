@@ -1,14 +1,11 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../Hooks/useTheame";
+import usePagination from "../Hooks/usePagination";
+import { API_BASE_URL } from "../config/api";
+import { useEffect } from "react";
 
-const categories = [
-  { emoji: "🔬", title: "Science", count: 80, color: "text-emerald-500" },
-  { emoji: "🌍", title: "Geography", count: 60, color: "text-blue-500" },
-  { emoji: "💻", title: "Technology", count: 95, color: "text-violet-500" },
-  { emoji: "📖", title: "History", count: 70, color: "text-amber-500" },
-  { emoji: "🎬", title: "Pop Culture", count: 50, color: "text-rose-500" },
-  { emoji: "🧮", title: "Math", count: 45, color: "text-cyan-500" },
-];
+const CATEGORIES_URL_AUTH   = `${API_BASE_URL}/api/client/bundle`;
+const CATEGORIES_URL_NOAUTH = `${API_BASE_URL}/api/client/bundlesNoauth`;
 
 const stats = [
   { label: "Questions", value: "500+" },
@@ -17,8 +14,20 @@ const stats = [
 ];
 
 const Home = () => {
+  const roleNum       = Number(localStorage.getItem("role") ?? 0);
+const categoriesUrl = roleNum === 2 ? CATEGORIES_URL_AUTH : CATEGORIES_URL_NOAUTH;
+const navigate=useNavigate()
   const { t } = useTheme();
+  const {
+    data: categories,
+    currentPage,
+    fetchData,
+  } = usePagination(categoriesUrl, { itemsPerPage: 6 });
 
+useEffect(() => {
+    fetchData({ page: currentPage});
+  }, [currentPage]);
+console.log("categories",categories);
   return (
     <div className={`min-h-screen ${t.bg} transition-colors duration-300`}>
       <section className="max-w-5xl mx-auto px-6 py-20 text-center">
@@ -53,23 +62,22 @@ const Home = () => {
       <section className="max-w-5xl mx-auto px-6 pb-20">
         <div className="flex items-center justify-between mb-6">
           <h3 className={`text-xl font-black ${t.text}`}>Popular Categories</h3>
-          <Link to="/quiz" className={`text-sm font-semibold ${t.accent} hover:underline`}>
+          <Link to="/categories" className={`text-sm font-semibold ${t.accent} hover:underline`}>
             View all →
           </Link>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {categories.map(({ emoji, title, count, color }) => (
-            <Link
-              to="/quiz"
-              key={title}
+          {categories.map((cat,i) => (
+            <div
+              onClick={() => navigate(`/categories/${cat.id}/sets`)}
+              key={i}
               className={`${t.bgCard} border ${t.border} ${t.bgCardHover} rounded-2xl p-5 flex items-center gap-4 transition-all group shadow-sm hover:shadow-md ${t.shadow}`}
             >
-              <span className="text-3xl">{emoji}</span>
+              {/* <span className="text-3xl">{emoji}</span> */}
               <div>
-                <div className={`font-bold text-sm ${t.text}`}>{title}</div>
-                <div className={`text-xs ${t.textMuted} mt-0.5`}>{count} questions</div>
+                <div className={`font-bold text-sm ${t.text}`}>{cat.title}</div>
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       </section>

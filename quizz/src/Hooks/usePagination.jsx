@@ -40,11 +40,7 @@ const usePagination = (url, { itemsPerPage = 6 } = {}) => {
       // const d = res.data
 
       // Extract rows — handles { bundles: [...] }, { data: [...] }, { rows: [...] }
-      const rows =
-        d.bundles ??
-        d.data    ??
-        d.rows    ??
-        [];
+      const rows =d.bundles ?? d.data ?? d.rows ?? d.quizzes ?? [];
 
       // Extract totals
       const totalItems =

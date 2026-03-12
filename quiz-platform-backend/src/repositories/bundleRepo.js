@@ -12,7 +12,8 @@ const getBundles = async (page = 1, limit = 6, search = null, id) => {
   const offset = (page - 1) * limit;
 
   const where = {
-    client_id: id
+    client_id: id,
+    is_deleted:false
   };
 
   if (search) {
@@ -35,7 +36,7 @@ const getBundlesWithoutAuth = async (page = 1, limit = 6, search = null) => {
 
   const offset = (page - 1) * limit;
 
-  const where = {};
+  const where = {is_deleted:false};
 
   if (search) {
     where.title = {

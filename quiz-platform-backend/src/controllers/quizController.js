@@ -17,7 +17,7 @@ const createQuiz = async (req, res) => {
     }
 
     const quiz = await quizService.createQuiz(req.body, bundle.id);
-
+    console.log(quiz);
     return res.status(201).json({
       success: true,
       data: quiz

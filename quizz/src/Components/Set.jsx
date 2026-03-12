@@ -40,8 +40,8 @@ export default function Set() {
     fetchData,
     goToPage,
   } = usePagination(`${SETS_URL}/quizzes/${categoryId}`, { itemsPerPage: 6 });
- 
-  console.log("sets,totalItems",totalItems);
+  // console.log("sets, totalItems:", totalItems);
+  // console.log("sets,totalItems",totalItems);
   console.log("sets",sets);
   console.log("sets currentPage",currentPage);
   console.log("sets totalPages",totalPages);
@@ -84,7 +84,11 @@ export default function Set() {
     setForm({
       title:      set.title,
       duration:   set.duration,
+// <<<<<<< v
+//       totalMarks: set.total_marks,
+// =======
       total_marks: set.total_marks,
+// >>>>>>> main
     });
     setEditId(set.id);
     setShowModal(true);
@@ -245,7 +249,7 @@ console.log(sets.quizzes)
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {sets.quizzes.map((set) => (
+            {sets.map((set) => (
               <div
                 key={set.id}
                 className={`${t.bgCard} border ${t.border} rounded-2xl p-5 flex flex-col gap-3 shadow-sm hover:shadow-md transition-all`}
