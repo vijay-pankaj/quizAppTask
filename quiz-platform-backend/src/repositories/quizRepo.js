@@ -44,7 +44,7 @@ const updateQuiz = async (id, data) => {
   });
 
   if (!quiz) return null;
-
+console.log(quiz);
   await quiz.update(data);
 
   return quiz;

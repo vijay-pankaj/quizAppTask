@@ -15,7 +15,7 @@ const adminLinks = [
 ];
 
 const clientLinks = [
-  { to: "/category",       label: "Manage Categories", icon: "📁" },
+  { to: "/categories",       label: "Manage Categories", icon: "📁" },
 ];
 
 const studentLinks = [
@@ -144,7 +144,7 @@ const Sidebar = () => {
         {token && (
           <button
             onClick={handleLogout}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-600 transition-all`}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-600 transition-all`}
           >
             <span className="text-base w-5 text-center shrink-0">🚪</span>
             {!collapsed && <span>Logout</span>}

@@ -55,6 +55,7 @@ const getQuizzes = async (query, bundleId) => {
 
 };
 const updateQuiz = async (id, data) => {
+  console.log(data);
   return await quizRepo.updateQuiz(id, data);
 };
 const deleteQuiz = async (id) => {
