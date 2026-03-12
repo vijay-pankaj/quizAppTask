@@ -31,6 +31,8 @@ const Login = () => {
       localStorage.setItem("role",   res.data.user.role_id);
       localStorage.setItem("userId", res.data.user.id);
 
+      // window.dispatchEvent(new Event("localStorageUpdated"));
+
       toast.success("Login successful! Welcome back 👋");
       if(res.data.user.role_id==1){
         navigate("/admin")

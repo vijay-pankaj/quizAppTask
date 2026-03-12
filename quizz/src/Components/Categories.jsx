@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config/api";
 import useDebounce from "../Hooks/useDebounce";
@@ -13,29 +13,57 @@ const CATEGORIES_URL_NOAUTH = `${API_BASE_URL}/api/client/bundlesNoauth`;
 
 const emptyForm = { name: "", description: "" };
 
+const SORT_OPTIONS = [
+  { label: "Newest",   value: "newest" },
+  { label: "Oldest",   value: "oldest" },
+  { label: "A → Z",    value: "az"     },
+  { label: "Z → A",    value: "za"     },
+];
+
+function sortCategories(list, sortBy) {
+  const arr = [...list];
+  switch (sortBy) {
+    case "oldest":
+      return arr.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    case "az":
+      return arr.sort((a, b) =>
+        (a.title ?? a.name ?? "").localeCompare(b.title ?? b.name ?? "")
+      );
+    case "za":
+      return arr.sort((a, b) =>
+        (b.title ?? b.name ?? "").localeCompare(a.title ?? a.name ?? "")
+      );
+    default: // newest
+      return arr.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }
+}
+
 export default function Categories() {
   const { t }    = useTheme();
   const navigate = useNavigate();
 
-  // ── Read role synchronously — correct on first render, no useEffect needed
   const roleNum       = Number(localStorage.getItem("role") ?? 0);
   const categoriesUrl = roleNum === 2 ? CATEGORIES_URL_AUTH : CATEGORIES_URL_NOAUTH;
-
-  // Only role 2 (client) can create / edit / delete
-  const canManage = roleNum === 2;
+  const canManage     = roleNum === 2;
 
   const [submitting,   setSubmitting]   = useState(false);
   const [error,        setError]        = useState(null);
   const [search,       setSearch]       = useState("");
+  const [searchOpen,   setSearchOpen]   = useState(false);
   const [form,         setForm]         = useState(emptyForm);
   const [editId,       setEditId]       = useState(null);
   const [showModal,    setShowModal]    = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [sortBy,       setSortBy]       = useState("newest");
+  const [sortOpen,     setSortOpen]     = useState(false);
+
+  const searchInputRef = useRef(null);
+  const sortRef        = useRef(null);
 
   const debouncedSearch = useDebounce(search, 500);
 
   const {
-    data: categories,
+    data: rawCategories,
     loading,
     currentPage,
     totalPages,
@@ -46,15 +74,35 @@ export default function Categories() {
     goToPage,
   } = usePagination(categoriesUrl, { itemsPerPage: 6 });
 
-  // Fetch on page or debounced-search change
+  const categories = sortCategories(rawCategories, sortBy);
+
   useEffect(() => {
     fetchData({ page: currentPage, search: debouncedSearch });
   }, [currentPage, debouncedSearch]);
 
-  // Reset to page 1 whenever search changes
   useEffect(() => {
     goToPage(1);
   }, [debouncedSearch]);
+
+  // Auto-focus search input when opened
+  useEffect(() => {
+    if (searchOpen) {
+      setTimeout(() => searchInputRef.current?.focus(), 50);
+    } else {
+      setSearch("");
+    }
+  }, [searchOpen]);
+
+  // Close sort dropdown on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (sortRef.current && !sortRef.current.contains(e.target)) {
+        setSortOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   // ── Modal helpers ──────────────────────────────────────────────────────────
   const openCreate = () => {
@@ -78,7 +126,7 @@ export default function Categories() {
     setForm(emptyForm);
   };
 
-  // ── Create / Update (always auth URL — only role 2 triggers this) ──────────
+  // ── Create / Update ────────────────────────────────────────────────────────
   const handleSubmit = async () => {
     if (!form.name.trim()) return;
     setSubmitting(true);
@@ -104,7 +152,7 @@ export default function Categories() {
     }
   };
 
-  // ── Delete (always auth URL — only role 2 triggers this) ──────────────────
+  // ── Delete ─────────────────────────────────────────────────────────────────
   const confirmDelete = async () => {
     setSubmitting(true);
     setError(null);
@@ -129,6 +177,8 @@ export default function Categories() {
   const getCatId   = (cat) => cat.id    ?? cat._id;
   const getCatName = (cat) => cat.title ?? cat.name ?? "";
 
+  const currentSortLabel = SORT_OPTIONS.find((o) => o.value === sortBy)?.label ?? "Sort";
+
   return (
     <div className={`min-h-screen ${t.bg} transition-colors duration-300 p-6`}>
       <div className="max-w-5xl mx-auto">
@@ -141,14 +191,106 @@ export default function Categories() {
               {totalItems} {totalItems === 1 ? "category" : "categories"} total
             </p>
           </div>
-          {canManage && (
-            <button
-              onClick={openCreate}
-              className={`${t.accentBg} ${t.accentBgHover} text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all`}
-            >
-              + New Category
-            </button>
-          )}
+
+          {/* Right controls */}
+          <div className="flex items-center gap-2">
+
+            {/* Search toggle + input */}
+            <div className="flex items-center gap-2">
+              {/* Animated search input */}
+              <div
+                className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                  searchOpen ? "w-56 opacity-100" : "w-0 opacity-0"
+                }`}
+              >
+                <div className="relative">
+                  <input
+                    ref={searchInputRef}
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search categories…"
+                    className={`w-full ${t.inputBg} border ${t.inputBorder} ${t.text} rounded-xl px-4 py-2.5 pr-9 text-sm focus:outline-none focus:ring-2 ${t.inputFocus} transition placeholder:${t.textMuted}`}
+                  />
+                  {/* Debounce spinner inside input */}
+                  {search !== debouncedSearch && (
+                    <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                      <div className={`w-3.5 h-3.5 border-2 ${t.accentBorder} border-t-transparent rounded-full animate-spin`} />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Search icon button */}
+              <button
+                onClick={() => setSearchOpen((v) => !v)}
+                title={searchOpen ? "Close search" : "Search"}
+                className={`w-9 h-9 flex items-center justify-center rounded-xl border ${t.border} ${t.bgCard} ${t.bgCardHover} ${t.textSecondary} transition-all`}
+              >
+                {searchOpen ? (
+                  // X icon
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                ) : (
+                  // Search icon
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                )}
+              </button>
+            </div>
+
+            {/* Sort dropdown */}
+            <div className="relative" ref={sortRef}>
+              <button
+                onClick={() => setSortOpen((v) => !v)}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border ${t.border} ${t.bgCard} ${t.bgCardHover} ${t.textSecondary} text-sm font-semibold transition-all`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="8" y1="6" x2="21" y2="6"/>
+                  <line x1="8" y1="12" x2="21" y2="12"/>
+                  <line x1="8" y1="18" x2="21" y2="18"/>
+                  <line x1="3" y1="6" x2="3.01" y2="6"/>
+                  <line x1="3" y1="12" x2="3.01" y2="12"/>
+                  <line x1="3" y1="18" x2="3.01" y2="18"/>
+                </svg>
+                <span className="hidden sm:inline">{currentSortLabel}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" className={`w-3.5 h-3.5 transition-transform ${sortOpen ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </button>
+
+              {sortOpen && (
+                <div className={`absolute right-0 mt-1.5 w-36 ${t.bgCard} border ${t.border} rounded-2xl shadow-xl z-30 overflow-hidden py-1`}>
+                  {SORT_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => { setSortBy(opt.value); setSortOpen(false); }}
+                      className={`w-full text-left px-4 py-2 text-sm font-medium transition-all
+                        ${sortBy === opt.value
+                          ? `${t.accentBg} text-white`
+                          : `${t.textSecondary} ${t.bgCardHover}`
+                        }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* New Category button — role 2 only */}
+            {canManage && (
+              <button
+                onClick={openCreate}
+                className={`${t.accentBg} ${t.accentBgHover} text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all`}
+              >
+                + New Category
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Error banner */}
@@ -163,21 +305,6 @@ export default function Categories() {
             </button>
           </div>
         )}
-
-        {/* Search */}
-        <div className="mb-6 relative w-full sm:w-80">
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search categories…"
-            className={`w-full ${t.inputBg} border ${t.inputBorder} ${t.text} rounded-xl px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 ${t.inputFocus} transition placeholder:${t.textMuted}`}
-          />
-          {search !== debouncedSearch && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <div className={`w-4 h-4 border-2 ${t.accentBorder} border-t-transparent rounded-full animate-spin`} />
-            </div>
-          )}
-        </div>
 
         {/* Grid */}
         {loading ? (
@@ -212,7 +339,6 @@ export default function Categories() {
                     {getCatName(cat).charAt(0).toUpperCase()}
                   </div>
 
-                  {/* Edit / Delete buttons — role 2 only */}
                   {canManage && (
                     <div className="flex gap-1 shrink-0">
                       <button

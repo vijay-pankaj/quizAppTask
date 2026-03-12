@@ -31,9 +31,9 @@ const createQuiz = async (data, bundleId) => {
 
 // <<<<<<< v
 // =======
-// const getQuizzesBybundleId = async (id)=>{
-//   return quizRepo.getQuizzesBybundleId(id)
-// }
+const getQuizzesBybundleId = async (id)=>{
+  return quizRepo.getQuizzesBybundleId(id)
+}
 // >>>>>>> main
 const getQuizzes = async (query, bundleId) => {
 

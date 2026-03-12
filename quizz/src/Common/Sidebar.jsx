@@ -57,11 +57,11 @@ const Sidebar = () => {
     localStorage.removeItem("role");
     localStorage.removeItem("userId");
     setToken(null);
-    setRole(null); // Clear role on logout
+    setRole(null); 
     navigate("/login");
   };
 
-  // --- 3. Determine which links to show based on the role ---
+  //links bases on role
   let navLinks = guestLinks;
   if (token) {
     if (role === "1") navLinks = adminLinks;
@@ -70,7 +70,6 @@ const Sidebar = () => {
     else navLinks = studentLinks; // Fallback just in case
   }
 
-  // Get the string representation of the role (e.g., "1" -> "Admin")
   const displayRole = roleNames[role] || "User";
 
   return (

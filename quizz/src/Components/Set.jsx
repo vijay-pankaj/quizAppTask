@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { API_BASE_URL } from "../config/api";
 import useDebounce from "../Hooks/useDebounce";
@@ -10,6 +10,27 @@ const SETS_URL       = `${API_BASE_URL}/api/client`;
 const CATEGORIES_URL = `${API_BASE_URL}/api/client`;
 const emptyForm      = { title: "", duration: "", total_marks: "" };
 
+const SORT_OPTIONS = [
+  { label: "Newest",   value: "newest" },
+  { label: "Oldest",   value: "oldest" },
+  { label: "A → Z",    value: "az"     },
+  { label: "Z → A",    value: "za"     },
+];
+
+function sortSets(list, sortBy) {
+  const arr = [...list];
+  switch (sortBy) {
+    case "oldest":
+      return arr.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    case "az":
+      return arr.sort((a, b) => (a.title ?? "").localeCompare(b.title ?? ""));
+    case "za":
+      return arr.sort((a, b) => (b.title ?? "").localeCompare(a.title ?? ""));
+    default: // newest
+      return arr.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }
+}
+
 export default function Set() {
   const { categoryId } = useParams();
   const navigate       = useNavigate();
@@ -19,17 +40,23 @@ export default function Set() {
   const [submitting, setSubmitting]     = useState(false);
   const [error, setError]               = useState(null);
   const [search, setSearch]             = useState("");
+  const [searchOpen, setSearchOpen]     = useState(false);
   const [form, setForm]                 = useState(emptyForm);
   const [editId, setEditId]             = useState(null);
   const [showModal, setShowModal]       = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [sortBy, setSortBy]             = useState("newest");
+  const [sortOpen, setSortOpen]         = useState(false);
 
-  const [roleNum,setRoleNum]=useState(null);
+  const [roleNum, setRoleNum] = useState(null);
+
+  const searchInputRef = useRef(null);
+  const sortRef        = useRef(null);
 
   const debouncedSearch = useDebounce(search, 500);
 
   const {
-    data: sets,
+    data: rawSets,
     loading,
     currentPage,
     totalPages,
@@ -40,13 +67,14 @@ export default function Set() {
     fetchData,
     goToPage,
   } = usePagination(`${SETS_URL}/quizzes/${categoryId}`, { itemsPerPage: 6 });
-  // console.log("sets, totalItems:", totalItems);
-  // console.log("sets,totalItems",totalItems);
-  console.log("sets",sets);
-  console.log("sets currentPage",currentPage);
-  console.log("sets totalPages",totalPages);
 
-   // ── Fetch parent category 
+  const sets = sortSets(rawSets, sortBy);
+
+  console.log("sets", sets);
+  console.log("sets currentPage", currentPage);
+  console.log("sets totalPages", totalPages);
+
+  // ── Fetch parent category
   useEffect(() => {
     const fetchCategory = async () => {
       try {
@@ -58,13 +86,14 @@ export default function Set() {
     };
     fetchCategory();
   }, [categoryId]);
-//role
-  useEffect(()=>{
-  const role = localStorage.getItem("role");
-  setRoleNum(Number(role));
-},[]);
 
-  // ── Fetch sets 
+  // role
+  useEffect(() => {
+    const role = localStorage.getItem("role");
+    setRoleNum(Number(role));
+  }, []);
+
+  // ── Fetch sets
   useEffect(() => {
     fetchData({ page: currentPage, search: debouncedSearch });
   }, [currentPage, debouncedSearch]);
@@ -73,7 +102,27 @@ export default function Set() {
     goToPage(1);
   }, [debouncedSearch]);
 
-  // ── Modal helpers 
+  // Auto-focus search input when opened
+  useEffect(() => {
+    if (searchOpen) {
+      setTimeout(() => searchInputRef.current?.focus(), 50);
+    } else {
+      setSearch("");
+    }
+  }, [searchOpen]);
+
+  // Close sort dropdown on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (sortRef.current && !sortRef.current.contains(e.target)) {
+        setSortOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // ── Modal helpers
   const openCreate = () => {
     setForm(emptyForm);
     setEditId(null);
@@ -82,13 +131,9 @@ export default function Set() {
 
   const openEdit = (set) => {
     setForm({
-      title:      set.title,
-      duration:   set.duration,
-// <<<<<<< v
-//       totalMarks: set.total_marks,
-// =======
+      title:       set.title,
+      duration:    set.duration,
       total_marks: set.total_marks,
-// >>>>>>> main
     });
     setEditId(set.id);
     setShowModal(true);
@@ -109,26 +154,27 @@ export default function Set() {
     Number(form.duration) > 0 &&
     Number(form.total_marks) > 0;
 
-    console.log(editId)
-  // ── Create / Update 
+  console.log(editId);
+
+  // ── Create / Update
   const handleSubmit = async () => {
     if (!isValid) return;
     setSubmitting(true);
     setError(null);
     try {
       const payload = {
-        title:      form.title.trim(),
-        duration:   Number(form.duration),
+        title:       form.title.trim(),
+        duration:    Number(form.duration),
         total_marks: Number(form.total_marks),
       };
       if (editId) {
-        await axios.put(`${SETS_URL}/client/quiz/${editId}`, payload,{headers:{
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }});
+        await axios.put(`${SETS_URL}/client/quiz/${editId}`, payload, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
       } else {
-        await axios.post(`${SETS_URL}/quiz1`,{ ...payload, categoryId },{headers:{
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }});
+        await axios.post(`${SETS_URL}/quiz1`, { ...payload, categoryId }, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
       }
       closeModal();
       fetchData({ page: currentPage, search: debouncedSearch });
@@ -139,15 +185,15 @@ export default function Set() {
     }
   };
 
-  // ── Delete 
+  // ── Delete
   const confirmDelete = async () => {
-    console.log("deleteTarget.id",deleteTarget.id)
+    console.log("deleteTarget.id", deleteTarget.id);
     setSubmitting(true);
     setError(null);
     try {
-      await axios.delete(`${SETS_URL}/admin/quiz/${deleteTarget.id}`,{headers:{
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }});
+      await axios.delete(`${SETS_URL}/admin/quiz/${deleteTarget.id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
       setDeleteTarget(null);
       const targetPage =
         sets.length === 1 && currentPage > 1 ? currentPage - 1 : currentPage;
@@ -159,7 +205,11 @@ export default function Set() {
       setSubmitting(false);
     }
   };
-console.log(sets.quizzes)
+
+  console.log(sets.quizzes);
+
+  const currentSortLabel = SORT_OPTIONS.find((o) => o.value === sortBy)?.label ?? "Sort";
+
   return (
     <div className={`min-h-screen ${t.bg} transition-colors duration-300 p-6`}>
       <div className="max-w-5xl mx-auto">
@@ -173,12 +223,9 @@ console.log(sets.quizzes)
             Categories
           </button>
           <span className={`text-sm ${t.textMuted}`}>›</span>
-          {/* <span className={`text-sm font-semibold ${t.text}`}>
-            {category?.name ?? "..."}
-          </span> */}
-          {/* <span className={`text-sm ${t.textMuted}`}>›</span> */}
           <span className={`text-sm font-semibold ${t.text}`}>Sets</span>
         </div>
+
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
@@ -191,15 +238,102 @@ console.log(sets.quizzes)
             </p>
           </div>
 
-          {/* Only admin/client can create sets */}
-          {roleNum !== 3 && (
-            <button
-              onClick={openCreate}
-              className={`${t.accentBg} ${t.accentBgHover} text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all`}
-            >
-              + New Set
-            </button>
-          )}
+          {/* Right controls */}
+          <div className="flex items-center gap-2">
+
+            {/* Search toggle + input */}
+            <div className="flex items-center gap-2">
+              {/* Animated search input */}
+              <div
+                className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                  searchOpen ? "w-56 opacity-100" : "w-0 opacity-0"
+                }`}
+              >
+                <div className="relative">
+                  <input
+                    ref={searchInputRef}
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search sets…"
+                    className={`w-full ${t.inputBg} border ${t.inputBorder} ${t.text} rounded-xl px-4 py-2.5 pr-9 text-sm focus:outline-none focus:ring-2 ${t.inputFocus} transition placeholder:${t.textMuted}`}
+                  />
+                  {search !== debouncedSearch && (
+                    <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                      <div className={`w-3.5 h-3.5 border-2 ${t.accentBorder} border-t-transparent rounded-full animate-spin`} />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Search icon button */}
+              <button
+                onClick={() => setSearchOpen((v) => !v)}
+                title={searchOpen ? "Close search" : "Search"}
+                className={`w-9 h-9 flex items-center justify-center rounded-xl border ${t.border} ${t.bgCard} ${t.bgCardHover} ${t.textSecondary} transition-all`}
+              >
+                {searchOpen ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                )}
+              </button>
+            </div>
+
+            {/* Sort dropdown */}
+            <div className="relative" ref={sortRef}>
+              <button
+                onClick={() => setSortOpen((v) => !v)}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border ${t.border} ${t.bgCard} ${t.bgCardHover} ${t.textSecondary} text-sm font-semibold transition-all`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="8" y1="6" x2="21" y2="6"/>
+                  <line x1="8" y1="12" x2="21" y2="12"/>
+                  <line x1="8" y1="18" x2="21" y2="18"/>
+                  <line x1="3" y1="6" x2="3.01" y2="6"/>
+                  <line x1="3" y1="12" x2="3.01" y2="12"/>
+                  <line x1="3" y1="18" x2="3.01" y2="18"/>
+                </svg>
+                <span className="hidden sm:inline">{currentSortLabel}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" className={`w-3.5 h-3.5 transition-transform ${sortOpen ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </button>
+
+              {sortOpen && (
+                <div className={`absolute right-0 mt-1.5 w-36 ${t.bgCard} border ${t.border} rounded-2xl shadow-xl z-30 overflow-hidden py-1`}>
+                  {SORT_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => { setSortBy(opt.value); setSortOpen(false); }}
+                      className={`w-full text-left px-4 py-2 text-sm font-medium transition-all
+                        ${sortBy === opt.value
+                          ? `${t.accentBg} text-white`
+                          : `${t.textSecondary} ${t.bgCardHover}`
+                        }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Only admin/client can create sets */}
+            {roleNum !== 3 && (
+              <button
+                onClick={openCreate}
+                className={`${t.accentBg} ${t.accentBgHover} text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all`}
+              >
+                + New Set
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Error banner */}
@@ -214,21 +348,6 @@ console.log(sets.quizzes)
             </button>
           </div>
         )}
-
-        {/* Search */}
-        <div className="mb-6 relative w-full sm:w-80">
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search sets…"
-            className={`w-full ${t.inputBg} border ${t.inputBorder} ${t.text} rounded-xl px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 ${t.inputFocus} transition placeholder:${t.textMuted}`}
-          />
-          {search !== debouncedSearch && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <div className={`w-4 h-4 border-2 ${t.accentBorder} border-t-transparent rounded-full animate-spin`} />
-            </div>
-          )}
-        </div>
 
         {/* Grid */}
         {loading ? (
@@ -378,7 +497,7 @@ console.log(sets.quizzes)
         )}
       </div>
 
-      {/* ── Create / Edit Modal  */}
+      {/* ── Create / Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div
