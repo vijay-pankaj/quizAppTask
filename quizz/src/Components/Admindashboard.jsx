@@ -6,7 +6,7 @@ import { API_BASE_URL } from "../config/api";
 
 const DASHBOARD_URL = `${API_BASE_URL}/api/admin/dashboard`;
 
-// ─── Animated counter ──────────────────────────────────────────────────────────
+//Animated counter 
 function useCountUp(target, duration = 1400, start = false) {
   const [val, setVal] = useState(0);
   useEffect(() => {
@@ -23,7 +23,7 @@ function useCountUp(target, duration = 1400, start = false) {
   return val;
 }
 
-// ─── Sparkline ─────────────────────────────────────────────────────────────────
+//Sparkline
 function Sparkline({ points, color, width = 80, height = 32 }) {
   const max = Math.max(...points), min = Math.min(...points);
   const range = max - min || 1;
@@ -40,7 +40,7 @@ function Sparkline({ points, color, width = 80, height = 32 }) {
   );
 }
 
-// ─── Stat Card ────────────────────────────────────────────────────────────────
+//Stat Card
 function StatCard({ icon, label, value, sub, color, sparkPoints, delay, started, t }) {
   const animated = useCountUp(typeof value === "number" ? value : 0, 1400, started);
   const display  = typeof value === "number" ? animated : value;
@@ -84,7 +84,7 @@ function StatCard({ icon, label, value, sub, color, sparkPoints, delay, started,
   );
 }
 
-// ─── Section Card wrapper ──────────────────────────────────────────────────────
+//Section Card wrapper
 function SectionCard({ children, t, delay, className = "" }) {
   return (
     <div
@@ -96,7 +96,7 @@ function SectionCard({ children, t, delay, className = "" }) {
   );
 }
 
-// ─── Section header ────────────────────────────────────────────────────────────
+//Section header
 function SectionHeader({ title, accentColor, action, t }) {
   return (
     <div className="flex items-center justify-between mb-5">
@@ -109,7 +109,7 @@ function SectionHeader({ title, accentColor, action, t }) {
   );
 }
 
-// ─── Activity Row ──────────────────────────────────────────────────────────────
+//Activity Row
 function ActivityRow({ icon, title, desc, time, color, badge, t }) {
   return (
     <div className={`flex items-start gap-3 py-3 border-b ${t.border} last:border-b-0 hover:${t.bgCardHover} px-1 rounded-lg transition-colors`}>
@@ -134,7 +134,7 @@ function ActivityRow({ icon, title, desc, time, color, badge, t }) {
   );
 }
 
-// ─── Donut Ring ────────────────────────────────────────────────────────────────
+//Donut Ring
 function DonutRing({ pct, color, size = 72, label, sublabel, t }) {
   const r    = (size - 10) / 2;
   const circ = 2 * Math.PI * r;
@@ -159,7 +159,7 @@ function DonutRing({ pct, color, size = 72, label, sublabel, t }) {
   );
 }
 
-// ─── Quick Action button ───────────────────────────────────────────────────────
+//Quick Action button
 function QuickAction({ icon, label, desc, color, onClick, t }) {
   return (
     <button
@@ -183,7 +183,7 @@ function QuickAction({ icon, label, desc, color, onClick, t }) {
   );
 }
 
-// ─── Main Component ─────────────────────────────────────────────────────────────
+//Main Component 
 export default function AdminDashboard() {
   const navigate    = useNavigate();
   const { t }       = useTheme();
@@ -211,6 +211,13 @@ export default function AdminDashboard() {
     };
     load();
   }, []);
+
+const greeting =()=>{
+  const hr=new Date().getHours();
+  if(hr<12)return "Good morning";
+  if(hr<18)return "Good afternoon";
+  return "Good evening";
+}
 
   const stats      = data ?? {};
   const students   = stats.total_students  ?? 0;
@@ -241,10 +248,10 @@ export default function AdminDashboard() {
       {/* ── Top bar ── */}
       <div className={`border-b ${t.border} sticky top-0 z-10 ${t.bgCard}`}
         style={{ backdropFilter: "blur(12px)" }}>
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
+        {/* <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-4"> */}
 
           {/* Brand */}
-          <div className="flex items-center gap-3">
+          {/* <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base text-white"
               style={{ background: "linear-gradient(135deg, #6366f1, #818cf8)", boxShadow: "0 0 14px #6366f130" }}>
               ⚡
@@ -253,18 +260,18 @@ export default function AdminDashboard() {
               <h1 className={`${t.text} font-black text-lg leading-none`}>QUIZ ADMIN</h1>
               <p className={`${t.textMuted} text-xs`}>Control Panel</p>
             </div>
-          </div>
+          </div> */}
 
           {/* Date + status */}
-          <div className={`hidden md:flex items-center gap-2 text-xs ${t.textMuted}`}>
+          {/* <div className={`hidden md:flex items-center gap-2 text-xs ${t.textMuted}`}>
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span>System Online</span>
             <span className="mx-1 opacity-30">|</span>
             <span>{now}</span>
-          </div>
+          </div> */}
 
           {/* Actions */}
-          <div className="flex items-center gap-2">
+          {/* <div className="flex items-center gap-2">
             <div className={`w-8 h-8 rounded-lg ${t.bgCard} border ${t.border} flex items-center justify-center text-sm cursor-pointer hover:opacity-80 transition-opacity`}>
               🔔
             </div>
@@ -272,8 +279,8 @@ export default function AdminDashboard() {
               style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}>
               A
             </div>
-          </div>
-        </div>
+          </div> */}
+        {/* </div> */}
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
@@ -281,7 +288,7 @@ export default function AdminDashboard() {
         {/* ── Welcome ── */}
         <div className="mb-8 fade-in">
           <h2 className={`text-2xl font-black ${t.text} mb-1`}>
-            Good morning, <span style={{ color: "#6366f1" }}>Admin</span> 👋
+            {greeting()} <span style={{ color: "#6366f1" }}>Admin</span> 👋
           </h2>
           <p className={`${t.textMuted} text-sm`}>
             Here's what's happening with your quiz platform today.

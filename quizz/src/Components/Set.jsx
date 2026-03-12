@@ -40,10 +40,13 @@ export default function Set() {
     fetchData,
     goToPage,
   } = usePagination(`${SETS_URL}/quizzes/${categoryId}`, { itemsPerPage: 6 });
-  // ── Fetch parent category 
+ 
+  console.log("sets,totalItems",totalItems);
   console.log("sets",sets);
   console.log("sets currentPage",currentPage);
   console.log("sets totalPages",totalPages);
+
+   // ── Fetch parent category 
   useEffect(() => {
     const fetchCategory = async () => {
       try {
@@ -166,13 +169,12 @@ console.log(sets.quizzes)
             Categories
           </button>
           <span className={`text-sm ${t.textMuted}`}>›</span>
-          <span className={`text-sm font-semibold ${t.text}`}>
+          {/* <span className={`text-sm font-semibold ${t.text}`}>
             {category?.name ?? "..."}
-          </span>
-          <span className={`text-sm ${t.textMuted}`}>›</span>
+          </span> */}
+          {/* <span className={`text-sm ${t.textMuted}`}>›</span> */}
           <span className={`text-sm font-semibold ${t.text}`}>Sets</span>
         </div>
-
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
