@@ -144,12 +144,12 @@ function ViewModal({ open, onClose, client }) {
   if (!client) return null;
   const color = avatarColor(client.name);
   const rows = [
-    { label: "Company",        icon: "🏢", value: client.company_name },
+    { label: "Company",        icon: "🏢", value: client.companyName },
     { label: "Contact Person", icon: "👤", value: client.name },
     { label: "Email",          icon: "✉️", value: client.email },
-    { label: "Phone",          icon: "📞", value: client.contact_number },
+    { label: "Phone",          icon: "📞", value: client.contactNumber },
     { label: "Password",       icon: "🔑", value: showPass ? client.password : "••••••••", toggle: true },
-    { label: "Joined",         icon: "📅", value: client.createdAt ? new Date(client.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "—" },
+    // { label: "Joined",         icon: "📅", value: client.createdAt ? new Date(client.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "—" },
   ];
   return (
     <Modal open={open} onClose={onClose} title="Client Profile" subtitle="Full account details">
@@ -337,7 +337,7 @@ console.log(clients.data)
     { label: "Company", key: "companyName" },
     { label: "Email",   key: "email" },
     { label: "Phone",   key: null },
-    { label: "Joined",  key: "createdAt" },
+    // { label: "Joined",  key: "createdAt" },
     { label: "Actions", key: null },
   ];
 
@@ -458,14 +458,14 @@ console.log(clients.data)
                           </td>
                           <td style={{ padding: "12px 18px" }}>
                             <span style={{ background: `${color}0e`, border: `1px solid ${color}2e`, color, borderRadius: 6, padding: "3px 9px", fontSize: 12, fontWeight: 600, fontFamily: "'Sora',sans-serif", whiteSpace: "nowrap" }}>
-                              🏢 {c.company_name}
+                              🏢 {c.companyName}
                             </span>
                           </td>
                           <td style={{ padding: "12px 18px", color: "#475569", fontSize: 13 }}>{c.email}</td>
-                          <td style={{ padding: "12px 18px", color: "#64748b", fontSize: 13, whiteSpace: "nowrap" }}>{c.contact_number}</td>
-                          <td style={{ padding: "12px 18px", color: "#94a3b8", fontSize: 12.5 }}>
+                          <td style={{ padding: "12px 18px", color: "#64748b", fontSize: 13, whiteSpace: "nowrap" }}>{c.contactNumber}</td>
+                          {/* <td style={{ padding: "12px 18px", color: "#94a3b8", fontSize: 12.5 }}>
                             {c.createdAt ? new Date(c.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
-                          </td>
+                          </td> */}
                           <td style={{ padding: "12px 18px" }}>
                             <div className="adm-acts" style={{ display: "flex", gap: 5 }}>
                               {[
@@ -511,7 +511,7 @@ console.log(clients.data)
         {editClient && (
           <ClientForm
             key={editClient._id || editClient.id}
-            initial={{ company_name: editClient.company_name, name: editClient.name, email: editClient.email, contact_number: editClient.contact_number, password: "" }}
+            initial={{ company_name: editClient.companyName, name: editClient.name, email: editClient.email, contact_number: editClient.contactNumber, password: ""}}
             onSubmit={handleEdit}
             onCancel={() => setEditClient(null)}
             submitLabel="Save Changes"

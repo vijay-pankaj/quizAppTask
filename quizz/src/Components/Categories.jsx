@@ -25,7 +25,7 @@ export default function Categories() {
   const debouncedSearch = useDebounce(search, 500);
 
   const {
-    data: categories,   // usePagination now returns rows directly as `data`
+    data: categories,
     loading,
     currentPage,
     totalPages,
@@ -36,6 +36,7 @@ export default function Categories() {
     fetchData,
     goToPage,
   } = usePagination(CATEGORIES_URL, { itemsPerPage: 6 });
+  console.log("category totalItems",totalItems);
   console.log("categories",categories);
   console.log("totalPages",totalPages);
   console.log("currentPage",currentPage);
