@@ -7,7 +7,7 @@ const createBundle = async (data, transaction = null) => {
 
 };
 
-const getBundles = async (page = 1, limit = 10, search = null) => {
+const getBundles = async (page = 1, limit = 6, search = null) => {
 
   const offset = (page - 1) * limit;
 

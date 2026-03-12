@@ -8,9 +8,10 @@ import { useTheme } from "../Hooks/useTheame";
 
 const CATEGORIES_URL = `${API_BASE_URL}/api/client/bundle`;
 const emptyForm = { name: "", description: "" };
+
 export default function Categories() {
   const { t } = useTheme();
-  
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError]           = useState(null);
   const [search, setSearch]         = useState("");
@@ -18,12 +19,13 @@ export default function Categories() {
   const [editId, setEditId]         = useState(null);
   const [showModal, setShowModal]   = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const [roleNum,setRoleNum]=useState(null);
+  const [roleNum, setRoleNum]       = useState(null);
   const navigate = useNavigate();
-  
+
   const debouncedSearch = useDebounce(search, 500);
+
   const {
-    data: rawData,
+    data: categories,   // usePagination now returns rows directly as `data`
     loading,
     currentPage,
     totalPages,
@@ -34,34 +36,32 @@ export default function Categories() {
     fetchData,
     goToPage,
   } = usePagination(CATEGORIES_URL, { itemsPerPage: 6 });
-  
-  const categories = Array.isArray(rawData)
-  ? rawData
-  : rawData?.bundles ?? rawData?.data?.bundles ?? [];
-  
-  // ── Fetch on page or search change
+  console.log("categories",categories);
+  console.log("totalPages",totalPages);
+
+  // Fetch on page or debounced-search change
   useEffect(() => {
     fetchData({ page: currentPage, search: debouncedSearch });
   }, [currentPage, debouncedSearch]);
-  
-  // Reset to page 1 on new search
+
+  // Reset to page 1 whenever search changes
   useEffect(() => {
     goToPage(1);
   }, [debouncedSearch]);
 
-  //fetch roleNum
-  useEffect(()=>{
-  const role = localStorage.getItem("role");
-  setRoleNum(Number(role));
-},[]);
-  
-  // ── Modal helpers
+  // Read role from localStorage once
+  useEffect(() => {
+    const role = localStorage.getItem("role");
+    setRoleNum(Number(role));
+  }, []);
+
+  // ── Modal helpers ──────────────────────────────────────────────────────────
   const openCreate = () => {
     setForm(emptyForm);
     setEditId(null);
     setShowModal(true);
   };
-  
+
   const openEdit = (cat) => {
     setForm({
       name: cat.title ?? cat.name ?? "",
@@ -76,24 +76,23 @@ export default function Categories() {
     setEditId(null);
     setForm(emptyForm);
   };
-  
-  //Create / Update
+
+  // ── Create / Update ────────────────────────────────────────────────────────
   const handleSubmit = async () => {
     if (!form.name.trim()) return;
     setSubmitting(true);
     setError(null);
     try {
+      const token = localStorage.getItem("token");
       const payload = { title: form.name, description: form.description };
       if (editId) {
-              const token = localStorage.getItem("token")
-        await axios.put(`${CATEGORIES_URL}/${editId}`, payload,{headers:{
-          Authorization:`bearer ${token}`
-        }});
+        await axios.put(`${CATEGORIES_URL}/${editId}`, payload, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
       } else {
-        const token = localStorage.getItem("token")
-        await axios.post(CATEGORIES_URL, payload,{headers:{
-          Authorization:`bearer ${token}`
-        }});
+        await axios.post(CATEGORIES_URL, payload, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
       }
       closeModal();
       fetchData({ page: currentPage, search: debouncedSearch });
@@ -104,23 +103,24 @@ export default function Categories() {
     }
   };
 
-  // ── Delete
+  // ── Delete ─────────────────────────────────────────────────────────────────
   const confirmDelete = async () => {
     setSubmitting(true);
     setError(null);
     try {
+      const token    = localStorage.getItem("token");
       const targetId = deleteTarget.id ?? deleteTarget._id;
-              const token = localStorage.getItem("token")
-
-      await axios.delete(`${CATEGORIES_URL}/${targetId}`,{headers:{
-          Authorization:`bearer ${token}`
-        }});
+      await axios.delete(`${CATEGORIES_URL}/${targetId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setDeleteTarget(null);
+      // If we deleted the last item on this page, go back one page
       const targetPage =
-        categories.length === 1 && currentPage > 1
-          ? currentPage - 1
-          : currentPage;
-      goToPage(targetPage);
+        categories.bundles.length === 1 && categories.currentPage > 1
+          ? categories.currentPage - 1
+          : categories.currentPage;
+
+      goToPage(targetPage)
       fetchData({ page: targetPage, search: debouncedSearch });
     } catch (err) {
       setError(err.response?.data?.message || err.message);
@@ -129,7 +129,6 @@ export default function Categories() {
     }
   };
 
- 
   const getCatId   = (cat) => cat.id   ?? cat._id;
   const getCatName = (cat) => cat.title ?? cat.name ?? "";
 
@@ -145,12 +144,14 @@ export default function Categories() {
               {totalItems} {totalItems === 1 ? "category" : "categories"} total
             </p>
           </div>
-          {(roleNum == 1 || roleNum == 2) && <button
-            onClick={openCreate}
-            className={`${t.accentBg} ${t.accentBgHover} text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all`}
-          >
-            + New Category
-          </button>}
+          {(roleNum === 1 || roleNum === 2) && (
+            <button
+              onClick={openCreate}
+              className={`${t.accentBg} ${t.accentBgHover} text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all`}
+            >
+              + New Category
+            </button>
+          )}
         </div>
 
         {/* Error banner */}
@@ -204,7 +205,7 @@ export default function Categories() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {categories.map((cat) => (
+            {categories.bundles.map((cat) => (
               <div
                 key={getCatId(cat)}
                 onClick={() => navigate(`/categories/${getCatId(cat)}/sets`)}
@@ -217,22 +218,24 @@ export default function Categories() {
                   >
                     {getCatName(cat).charAt(0).toUpperCase()}
                   </div>
-                  {(roleNum == 1 || roleNum == 2) && <div className="flex gap-1 shrink-0">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); openEdit(cat); }}
-                      className={`w-8 h-8 rounded-lg border ${t.border} ${t.bgCardHover} ${t.textSecondary} flex items-center justify-center text-sm transition-all`}
-                      title="Edit"
-                    >
-                      ✏️
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setDeleteTarget(cat); }}
-                      className="w-8 h-8 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-500 flex items-center justify-center text-sm transition-all"
-                      title="Delete"
-                    >
-                      🗑️
-                    </button>
-                  </div>}
+                  {(roleNum === 1 || roleNum === 2) && (
+                    <div className="flex gap-1 shrink-0">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); openEdit(cat); }}
+                        className={`w-8 h-8 rounded-lg border ${t.border} ${t.bgCardHover} ${t.textSecondary} flex items-center justify-center text-sm transition-all`}
+                        title="Edit"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setDeleteTarget(cat); }}
+                        className="w-8 h-8 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-500 flex items-center justify-center text-sm transition-all"
+                        title="Delete"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Card content */}
@@ -270,10 +273,10 @@ export default function Categories() {
         )}
 
         {/* Pagination */}
-        {totalPages > 1 && (
+        {categories.totalPages > 1 && (
           <div className="flex items-center justify-center gap-1.5 mt-8 flex-wrap">
             <button
-              onClick={() => goToPage(currentPage - 1)}
+              onClick={() => goToPage(categories.currentPage - 1)}
               disabled={!hasPrev || loading}
               className={`px-3 py-2 rounded-xl text-sm font-semibold border ${t.border} ${t.bgCard} ${t.textSecondary} disabled:opacity-40 ${t.bgCardHover} transition-all`}
             >
@@ -303,8 +306,9 @@ export default function Categories() {
             )}
 
             <button
-              onClick={() => goToPage(currentPage + 1)}
-              disabled={!hasNext || loading}
+              onClick={() => goToPage(categories.currentPage + 1)}
+              // disabled={!hasNext || loading}
+              disabled={categories.currentPage === categories.totalPages}
               className={`px-3 py-2 rounded-xl text-sm font-semibold border ${t.border} ${t.bgCard} ${t.textSecondary} disabled:opacity-40 ${t.bgCardHover} transition-all`}
             >
               Next →
@@ -312,9 +316,9 @@ export default function Categories() {
           </div>
         )}
 
-        {totalPages > 1 && (
+        {categories.totalPages > 1 && (
           <p className={`text-center text-xs ${t.textMuted} mt-3`}>
-            Page {currentPage} of {totalPages} · {totalItems} total
+            Page {categories.currentPage} of {categories.totalPages} · {categories.totalItems} total
           </p>
         )}
       </div>

@@ -14,7 +14,7 @@ const usePagination = (url, { itemsPerPage = 6 } = {}) => {
   });
 
   const fetchData = useCallback(async ({
-    page      = meta.currentPage,
+    page      = 1,
     limit     = itemsPerPage,
     search    = "",
     sortBy    = "",
@@ -23,24 +23,52 @@ const usePagination = (url, { itemsPerPage = 6 } = {}) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.get(url, {headers:{Authorization: `Bearer ${localStorage.getItem('token')}`}},{
+      const res = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
         params: {
           page,
           limit,
-          ...(search.trim()  && { search: search.trim() }),
-          ...(sortBy.trim()  && { sortBy }),
-          ...(sortOrder      && { sortOrder }),
+          ...(search.trim() && { search: search.trim() }),
+          ...(sortBy.trim() && { sortBy }),
+          ...(sortOrder && { sortOrder }),
         },
       });
 
       const d = res.data;
-      setData(d.data ?? []);
-      setMeta({
-        currentPage:  d.pagination?.currentPage  ?? d.currentPage  ?? page,
-        totalPages:   d.pagination?.totalPages   ?? d.pages        ?? 1,
-        totalItems:   d.pagination?.totalItems   ?? d.total        ?? 0,
-        itemsPerPage: limit,
-      });
+
+      // Extract rows — handles { bundles: [...] }, { data: [...] }, { rows: [...] }
+      const rows =
+        d.bundles ??
+        d.data    ??
+        d.rows    ??
+        [];
+
+      // Extract totals
+      const totalItems =
+        d.totalRecords           ??
+        d.pagination?.totalItems ??
+        d.total                  ??
+        0;
+
+      const totalPages =
+        d.totalPages              ||
+        d.pagination?.totalPages  ||
+        d.pages                   ||
+        Math.ceil(totalItems / limit) ||
+        1;
+
+      const currentPage =
+        d.currentPage             ??
+        d.pagination?.currentPage ??
+        page;
+
+      // ✅ Store only the array, not the whole object
+      setData(rows);
+      console.log("in pagination",rows);
+      setMeta({ currentPage, totalPages, totalItems, itemsPerPage: limit });
+
     } catch (err) {
       setError(err.response?.data?.message || err.message || "Failed to fetch");
       setData([]);
@@ -50,10 +78,11 @@ const usePagination = (url, { itemsPerPage = 6 } = {}) => {
   }, [url, itemsPerPage]);
 
   const goToPage = useCallback((page) => {
-    if (page >= 1 && page <= meta.totalPages) {
-      setMeta((prev) => ({ ...prev, currentPage: page }));
-    }
-  }, [meta.totalPages]);
+    setMeta((prev) => {
+      if (page < 1 || page > prev.totalPages) return prev;
+      return { ...prev, currentPage: page };
+    });
+  }, []);
 
   const pageNumbers = (() => {
     const { currentPage, totalPages } = meta;
