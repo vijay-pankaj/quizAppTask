@@ -23,4 +23,7 @@ router.get(
     roleMiddleware(2),
     adminController.getClientById)
 
+  router.put("/admin/client/:id", adminController.updateClient);
+router.delete("/admin/client/:id", adminController.deleteClient);
+
 export default router;

@@ -60,8 +60,67 @@ const getQuestions = async (req, res) => {
   }
 
 };
+const updateQuestion = async (req, res) => {
 
+  try {
+
+    const questionId = req.params.id;
+    const clientId = req.user.id;
+    const data = req.body;
+
+    const question = await questionService.updateQuestion(
+      clientId,
+      questionId,
+      data
+    );
+
+    res.json({
+      success: true,
+      message: "Question updated successfully",
+      data: question
+    });
+
+  } catch (error) {
+
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+
+  }
+
+};
+
+const deleteQuestion = async (req, res) => {
+
+  try {
+
+    const questionId = req.params.id;
+    const clientId = req.user.id;
+
+    const result = await questionService.deleteQuestion(
+      clientId,
+      questionId
+    );
+
+    res.json({
+      success: true,
+      message: result.message
+    });
+
+  } catch (error) {
+
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+
+  }
+
+};
 export default {
   createQuestion,
-  getQuestions
+  getQuestions,
+  updateQuestion,
+  deleteQuestion
 };

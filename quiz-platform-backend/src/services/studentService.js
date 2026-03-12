@@ -47,18 +47,53 @@ const registerStudent = async (data) => {
       },
       transaction,
     );
-    await sendEmail(
-      student.email,
-      "Welcome to Quiz Platform",
-      `Hello ${student.name},
+   await sendEmail(
+  student.email,
+  "Welcome to Quiz Platform",
+  `
+  <div style="font-family: Arial, sans-serif; background:#f4f6f8; padding:30px;">
+    <div style="max-width:600px; margin:auto; background:#ffffff; border-radius:8px; padding:30px;">
 
-Welcome to the Quiz Platform!
+      <h2 style="color:#2c3e50;">Welcome to Quiz Platform 🎉</h2>
 
-You can now log in and start attempting quizzes.
+      <p style="font-size:16px; color:#555;">
+        Hello <strong>${student.name}</strong>,
+      </p>
 
-Best of luck!
-`,
-    );
+      <p style="font-size:15px; color:#555;">
+        Your student account has been successfully created.  
+        You can now log in and start attempting quizzes assigned to you.
+      </p>
+
+      <div style="background:#f1f3f5; padding:15px; border-radius:6px; margin:20px 0;">
+        <p style="margin:0; font-size:15px;"><strong>Email:</strong> ${student.email}</p>
+      </div>
+
+      <p style="font-size:15px; color:#555;">
+        Click the button below to start your learning journey.
+      </p>
+
+      <div style="text-align:center; margin:25px 0;">
+        <a href="http://localhost:3000/login"
+           style="background:#3498db; color:white; padding:12px 25px; text-decoration:none; border-radius:5px; font-size:15px;">
+           Login to Platform
+        </a>
+      </div>
+
+      <p style="font-size:14px; color:#888;">
+        Best of luck with your quizzes!
+      </p>
+
+      <hr style="margin:25px 0;">
+
+      <p style="font-size:13px; color:#999;">
+        Quiz Platform Team
+      </p>
+
+    </div>
+  </div>
+  `
+);
     await transaction.commit();
     return student;
   } catch (error) {
@@ -73,25 +108,38 @@ const startQuiz = async (userId, quizId) => {
   const transaction = await sequelize.transaction();
 
   try {
-    const student = await studentRepo.findStudentByUserId(userId);
 
+    const student = await studentRepo.findStudentByUserId(userId);
     if (!student) throw new Error("Student not found");
 
     const quiz = await models.Quiz.findByPk(quizId);
-
     if (!quiz) throw new Error("Quiz not found");
 
-    const attempt = await models.QuizAttempt.create(
-      {
+    // 🔒 lock query to prevent race condition
+    let attempt = await models.QuizAttempt.findOne({
+      where: {
         student_id: student.id,
         quiz_id: quizId,
-        score: 0,
+        submitted_at: null
       },
-      { transaction },
-    );
+      transaction,
+      lock: transaction.LOCK.UPDATE
+    });
+
+    if (!attempt) {
+      attempt = await models.QuizAttempt.create(
+        {
+          student_id: student.id,
+          quiz_id: quizId,
+          score: 0
+        },
+        { transaction }
+      );
+    }
 
     await transaction.commit();
     return attempt;
+
   } catch (error) {
     await transaction.rollback();
     throw error;

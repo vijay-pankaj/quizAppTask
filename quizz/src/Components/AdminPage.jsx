@@ -272,7 +272,7 @@ console.log(clients.data)
     try {
       const token = localStorage.getItem("token");
       const id = editClient._id || editClient.id;
-      await axios.put(`${BASE}/${id}`, form, {
+      await axios.put(`${BASE}/admin/admin/client/${id}`, form, {
         headers: { authorization: `Bearer ${token}` }
       });
       toast.success(`${form.name} updated!`);

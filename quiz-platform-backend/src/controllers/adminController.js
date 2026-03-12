@@ -108,10 +108,55 @@ const dashboard = async (req, res) => {
   }
 
 };
+const updateClient = async (req, res) => {
+  try {
 
+    const clientId = req.params.id;
+    const data = req.body;
+
+    const client = await clientService.updateClient(clientId, data);
+
+    res.status(200).json({
+      success: true,
+      message: "Client updated successfully",
+      data: client
+    });
+
+  } catch (error) {
+
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+
+  }
+};
+
+const deleteClient = async (req, res) => {
+  try {
+
+    const clientId = req.params.id;
+
+    const result = await clientService.deleteClient(clientId);
+
+    res.status(200).json({
+      success: true,
+      message: result.message
+    });
+
+  } catch (error) {
+
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+
+  }
+};
 export default {
   createClient,
   getAllClient,
   getClientById,
-  dashboard
+  dashboard,
+  updateClient,deleteClient
 };

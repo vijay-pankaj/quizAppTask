@@ -22,7 +22,7 @@ const studentLinks = [
   { to: "/",               label: "Home",        icon: "⊞" },
   { to: "/categories",     label: "Test Series", icon: "📝" },
   { to: "/history", label: "History",     icon: "⏳" },
-  { to: "/leaderboard",    label: "Leaderboard", icon: "🏆" },
+ 
 ];
 
 // --- 2. Map role numbers to display names ---

@@ -1,9 +1,9 @@
 import bcrypt from "bcrypt";
 import sequelize from "../config/sequelizeConfig.js";
 import clientRepo from "../repositories/clientRepo.js";
-import userRepo from "../repositories/userRepo.js";
 import dashboardRepo from "../repositories/dashboardRepo.js";
-
+import userRepo from "../repositories/userRepo.js";
+import sendEmail from "../utils/mailer.js";
 const createClient = async (data) => {
 
   const transaction = await sequelize.transaction();
@@ -31,6 +31,50 @@ const createClient = async (data) => {
       transaction
     );
 
+    await sendEmail(
+  user.email,
+  "Your Quiz Platform Account",
+  `
+  <div style="font-family: Arial, sans-serif; background:#f4f6f8; padding:30px;">
+    <div style="max-width:600px; margin:auto; background:#ffffff; border-radius:8px; padding:30px;">
+
+      <h2 style="color:#2c3e50;">Client Account Created ✅</h2>
+
+      <p style="font-size:16px; color:#555;">
+        Hello <strong>${user.name}</strong>,
+      </p>
+
+      <p style="font-size:15px; color:#555;">
+        Your account has been created successfully on the Quiz Platform.
+        You can now manage students, bundles, and quizzes.
+      </p>
+
+      <div style="background:#f1f3f5; padding:15px; border-radius:6px; margin:20px 0;">
+        <p style="margin:5px 0;"><strong>Email:</strong> ${user.email}</p>
+        <p style="margin:5px 0;"><strong>Password:</strong> ${data.password}</p>
+      </div>
+
+      <p style="font-size:14px; color:#e74c3c;">
+        ⚠ Please change your password after logging in for security.
+      </p>
+
+      <div style="text-align:center; margin:25px 0;">
+        <a href="http://localhost:3000/login"
+           style="background:#27ae60; color:white; padding:12px 25px; text-decoration:none; border-radius:5px;">
+           Login to Dashboard
+        </a>
+      </div>
+
+      <hr style="margin:25px 0;">
+
+      <p style="font-size:13px; color:#999;">
+        Quiz Platform Team
+      </p>
+
+    </div>
+  </div>
+  `
+);
     await transaction.commit();
 
     return client;
@@ -51,8 +95,81 @@ const getDashboard = async () => {
   return stats;
 
 };
+const updateClient = async (clientId, data) => {
 
+  const transaction = await sequelize.transaction();
+
+  try {
+
+    const client = await models.Client.findByPk(clientId, { transaction });
+
+    if (!client) throw new Error("Client not found");
+
+    await client.update({
+      name: data.name,
+      email: data.email
+    }, { transaction });
+
+    await sendEmail(
+      client.email,
+      "Client Profile Updated",
+      `
+      <h2>Profile Updated</h2>
+      <p>Hello ${client.name},</p>
+      <p>Your client account has been updated by the admin.</p>
+      `
+    );
+
+    await transaction.commit();
+
+    return client;
+
+  } catch (error) {
+
+    await transaction.rollback();
+    throw error;
+
+  }
+};
+
+const deleteClient = async (clientId) => {
+
+  const transaction = await sequelize.transaction();
+
+  try {
+
+    const client = await models.Client.findByPk(clientId, { transaction });
+
+    if (!client) throw new Error("Client not found");
+
+    const email = client.email;
+    const name = client.name;
+
+    await client.destroy({ transaction });
+
+    await sendEmail(
+      email,
+      "Client Account Deleted",
+      `
+      <h2>Account Removed</h2>
+      <p>Hello ${name},</p>
+      <p>Your client account has been removed by admin.</p>
+      `
+    );
+
+    await transaction.commit();
+
+    return { message: "Client deleted successfully" };
+
+  } catch (error) {
+
+    await transaction.rollback();
+    throw error;
+
+  }
+};
 export default {
   createClient,
-  getDashboard
+  getDashboard,
+  deleteClient,updateClient
 };
