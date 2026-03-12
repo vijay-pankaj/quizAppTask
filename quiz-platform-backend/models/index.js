@@ -1,11 +1,11 @@
+import Answer from "./answer.js";
 import Bundle from "./bundle.js";
 import Client from "./client.js";
 import Question from "./question.js";
-import User from "./user.js";
 import Quiz from "./quiz.js";
 import QuizAttempt from "./quizAttempt.js";
 import Student from "./student.js";
-import Answer from "./answer.js";
+import User from "./user.js";
 
 /* ---------------- USER RELATIONS ---------------- */
 
@@ -16,7 +16,8 @@ User.hasOne(Client, {
 });
 
 Client.belongsTo(User, {
-  foreignKey: "user_id"
+  foreignKey: "user_id",
+  as:"users"
 });
 
 // User → Student
@@ -28,7 +29,6 @@ User.hasOne(Student, {
 Student.belongsTo(User, {
   foreignKey: "user_id"
 });
-
 
 /* ---------------- CLIENT RELATIONS ---------------- */
 

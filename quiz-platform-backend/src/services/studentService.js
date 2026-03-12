@@ -1,10 +1,9 @@
 import bcrypt from "bcrypt";
 import models from "../../models/index.js";
 import sequelize from "../config/sequelizeConfig.js";
-import attemptRepo from "../repositories/attemptRepo.js";
+import leaderboardRepo from "../repositories/leaderboardRepo.js";
 import studentRepo from "../repositories/studentRepo.js";
 import userRepo from "../repositories/userRepo.js";
-import leaderboardRepo from "../repositories/leaderboardRepo.js";
 
 import sendEmail from "../utils/mailer.js";
 const normalize = (val) => {
@@ -355,44 +354,113 @@ const deleteStudent = async (id) => {
 const getAttemptHistory = async (userId) => {
 
   const student = await studentRepo.findStudentByUserId(userId);
+
   if (!student) throw new Error("Student not found");
 
   const attempts = await models.QuizAttempt.findAll({
+
     where: { student_id: student.id },
+
     include: [
       {
         model: models.Quiz,
         as: "Quiz",
         attributes: ["id", "title"],
+
         include: [
           {
             model: models.Question,
             as: "Questions",
-            attributes: ["marks"],
+            attributes: ["id", "marks", "correct_answer"]
           }
         ]
+      },
+
+      {
+        model: models.Answer,
+        as: "Answers",
+        attributes: ["id", "question_id", "selected_option"]
       }
+
     ],
-    order: [["createdAt", "DESC"]],
+
+    order: [["createdAt", "DESC"]]
+
   });
 
-  return attempts.map(a => {
-    // Sum marks from all questions in this quiz
-    const totalMarks = a.Quiz?.Questions?.reduce((sum, q) => sum + (q.marks ?? 1), 0) ?? 0;
-    const percentage = totalMarks > 0 ? Math.round((a.score / totalMarks) * 100) : 0;
+  return attempts.map(attempt => {
+
+    const quiz = attempt.Quiz;
+
+    const questions = quiz?.Questions ?? [];
+    const answers = attempt.Answers ?? [];
+
+    const totalQuestions = questions.length;
+
+    const totalMarks = questions.reduce(
+      (sum, q) => sum + (q.marks ?? 1),
+      0
+    );
+
+    const attempted = answers.filter(
+      a => a.selected_option !== null
+    ).length;
+console.log(answers)
+    // ✅ FIXED CORRECT CALCULATION
+    const correct = answers.filter(a => {
+
+      const question = questions.find(
+        q => q.id === a.question_id
+      );
+      if (!question) return false;
+
+      return (
+        a.selected_option !== null &&
+        normalize(question.correct_answer) === normalize(a.selected_option)
+      );
+
+    }).length;
+// console.log(correct)
+    const wrong = attempted - correct;
+
+    const skipped = totalQuestions - attempted;
+
+    const percentage =
+      totalMarks > 0
+        ? Math.round((attempt.score / totalMarks) * 100)
+        : 0;
 
     return {
-      attempt_id:    a.id,
-      quiz_title:    a.Quiz?.title ?? "",
-      score:         a.score,
-      total_marks:   totalMarks,
+
+      attempt_id: attempt.id,
+
+      quiz_id: quiz?.id ?? null,
+
+      quiz_title: quiz?.title ?? "",
+
+      score: attempt.score,
+
+      total_marks: totalMarks,
+
+      total_questions: totalQuestions,
+
+      correct_answers: correct,
+
+      wrong_answers: wrong,
+
+      skipped,
+
       percentage,
-      submitted_at:  a.submitted_at,
+
+      submitted_at: attempt.submitted_at,
+
+      auto_submitted: attempt.auto_submitted ?? false
+
     };
+
   });
 
 };
-
 
 const leaderboard = async (quizId) => {
 

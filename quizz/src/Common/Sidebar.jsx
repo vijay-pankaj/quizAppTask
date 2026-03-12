@@ -1,29 +1,53 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "../Hooks/useTheame";
 
+// --- 1. Define Links based on Roles ---
 const guestLinks = [
   { to: "/",       label: "Home",    icon: "⊞" },
   { to: "/login",  label: "Login",   icon: "◉" },
   { to: "/signup", label: "Sign Up", icon: "◌" },
 ];
 
-const authLinks = [
-  { to: "/",           label: "Home",       icon: "⊞" },
-  { to: "/categories", label: "Categories", icon: "◈" },
+const adminLinks = [
+  { to: "/admindashboard", label: "Home",          icon: "⊞" },
+  { to: "/admin",          label: "Client Manage", icon: "👥" },
 ];
 
+const clientLinks = [
+  { to: "/category",       label: "Manage Categories", icon: "📁" },
+];
+
+const studentLinks = [
+  { to: "/",               label: "Home",        icon: "⊞" },
+  { to: "/categories",     label: "Test Series", icon: "📝" },
+  { to: "/history", label: "History",     icon: "⏳" },
+  { to: "/leaderboard",    label: "Leaderboard", icon: "🏆" },
+];
+
+// --- 2. Map role numbers to display names ---
+const roleNames = {
+  "1": "Admin",
+  "2": "Client",
+  "3": "Student",
+};
+
 const Sidebar = () => {
-  const location              = useLocation();
-  const navigate              = useNavigate();
+  const location = useLocation();
+  const navigate = useNavigate();
   const { t, theme, toggleTheme } = useTheme();
   const [collapsed, setCollapsed] = useState(false);
-  const [token, setToken]         = useState(localStorage.getItem("token"));
-  const role                      = localStorage.getItem("role");
+  
+  // Put both token and role in state so they react to changes
+  const [token, setToken] = useState(localStorage.getItem("token"));
+  const [role, setRole]   = useState(localStorage.getItem("role"));
 
-  // sync token if changed in another tab
+  // sync token and role if changed in another tab
   useEffect(() => {
-    const sync = () => setToken(localStorage.getItem("token"));
+    const sync = () => {
+      setToken(localStorage.getItem("token"));
+      setRole(localStorage.getItem("role"));
+    };
     window.addEventListener("storage", sync);
     return () => window.removeEventListener("storage", sync);
   }, []);
@@ -33,16 +57,26 @@ const Sidebar = () => {
     localStorage.removeItem("role");
     localStorage.removeItem("userId");
     setToken(null);
+    setRole(null); // Clear role on logout
     navigate("/login");
   };
 
-  const navLinks = token ? authLinks : guestLinks;
+  // --- 3. Determine which links to show based on the role ---
+  let navLinks = guestLinks;
+  if (token) {
+    if (role === "1") navLinks = adminLinks;
+    else if (role === "2") navLinks = clientLinks;
+    else if (role === "3") navLinks = studentLinks;
+    else navLinks = studentLinks; // Fallback just in case
+  }
+
+  // Get the string representation of the role (e.g., "1" -> "Admin")
+  const displayRole = roleNames[role] || "User";
 
   return (
     <aside
       className={`min-h-screen flex flex-col border-r ${t.border} ${t.bgCard} transition-all duration-300 ${collapsed ? "w-16" : "w-60"}`}
     >
-     
       <div className={`flex items-center justify-between px-4 py-4 border-b ${t.borderSubtle}`}>
         {!collapsed && (
           <span className={`font-black text-lg ${t.text}`}>
@@ -57,11 +91,11 @@ const Sidebar = () => {
         </button>
       </div>
 
-     
+      {/* Role Badge */}
       {token && !collapsed && (
         <div className={`mx-3 mt-3 px-3 py-2 rounded-xl ${t.accentLight} border ${t.accentBorder}`}>
           <p className={`text-xs font-bold uppercase tracking-widest ${t.accentText}`}>
-            {role ?? "user"}
+            {displayRole}
           </p>
         </div>
       )}
@@ -93,7 +127,6 @@ const Sidebar = () => {
 
       {/* Bottom section */}
       <div className={`p-3 border-t ${t.borderSubtle} flex flex-col gap-2`}>
-
         {/* Theme toggle */}
         <button
           onClick={toggleTheme}
