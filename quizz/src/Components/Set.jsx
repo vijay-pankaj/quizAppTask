@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { API_BASE_URL } from "../config/api";
 import useDebounce from "../Hooks/useDebounce";
@@ -144,7 +144,7 @@ export default function Set() {
     setEditId(null);
     setForm(emptyForm);
   };
-
+console.log("sets",sets)
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 

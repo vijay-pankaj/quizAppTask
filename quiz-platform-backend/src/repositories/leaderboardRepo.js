@@ -1,5 +1,5 @@
+import { Op, col, fn } from "sequelize";
 import models from "../../models/index.js";
-import { Op } from "sequelize";
 
 const getLeaderboard = async (quizId) => {
 
@@ -12,6 +12,12 @@ const getLeaderboard = async (quizId) => {
       }
     },
 
+    attributes: [
+      "student_id",
+      [fn("MAX", col("score")), "score"],
+      [fn("MIN", col("submitted_at")), "submitted_at"]
+    ],
+
     include: [
       {
         model: models.Student,
@@ -20,9 +26,11 @@ const getLeaderboard = async (quizId) => {
       }
     ],
 
+    group: ["student_id", "Student.id"],
+
     order: [
-      ["score", "DESC"],
-      ["submitted_at", "ASC"]
+      [fn("MAX", col("score")), "DESC"],
+      [fn("MIN", col("submitted_at")), "ASC"]
     ]
 
   });
@@ -31,6 +39,42 @@ const getLeaderboard = async (quizId) => {
 
 };
 
+const getTopStudents = async () => {
+
+  const students = await models.QuizAttempt.findAll({
+
+    attributes: [
+      "student_id",
+      [fn("SUM", col("score")), "total_score"],
+      [fn("COUNT", col("QuizAttempt.id")), "total_attempts"]
+    ],
+
+    include: [
+      {
+        model: models.Student,
+        as: "Student",
+        attributes: ["id", "name"]
+      }
+    ],
+
+    where: {
+      submitted_at: {
+        [Op.ne]: null
+      }
+    },
+
+    group: ["student_id", "Student.id"],
+
+    order: [[fn("SUM", col("score")), "DESC"]],
+
+    limit: 5
+
+  });
+
+  return students;
+
+};
 export default {
-  getLeaderboard
+  getLeaderboard,
+  getTopStudents
 };

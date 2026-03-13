@@ -42,7 +42,7 @@ export default function Quiz() {
   const [totalQuestions, setTotalQuestions]       = useState(0);
 
   const debouncedSearch = useDebounce(search, 500);
-
+console.log("SETID",setId)
   const {
     data: questions,
     loading,
@@ -92,7 +92,7 @@ export default function Quiz() {
     fetchDetails()
     totalCount()
   }, [setId]);
-// console.log('details',totalQuestions.count)
+console.log('details',details)
   // ── Fetch questions 
   useEffect(() => {
     fetchData({ page: currentPage, search: debouncedSearch });

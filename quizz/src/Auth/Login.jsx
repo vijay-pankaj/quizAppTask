@@ -35,7 +35,7 @@ const Login = () => {
 
       toast.success("Login successful! Welcome back 👋");
       if(res.data.user.role_id==1){
-        navigate("/admin")
+        navigate("/admindashboard")
       }else if(res.data.user.role_id==2){
         navigate('/categories')
       }
