@@ -9,9 +9,7 @@ const createQuiz = async (data, transaction = null) => {
 
 const getQuizzesBybundleId = async(id)=>{
   console.log("repoId",id)
-      return await models.Quiz.findOne({where:{
-        bundle_id:id
-      }})
+      return await models.Quiz.findByPk(id)
 }
 const getQuizzes = async (bundleId, page = 1, limit = 10, search = null) => {
 

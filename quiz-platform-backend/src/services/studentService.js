@@ -518,18 +518,31 @@ const leaderboard = async (quizId) => {
 
   const leaderboardData = attempts.map((a) => {
 
-    const row = {
+    return {
       rank: rank++,
       student_name: a.Student?.name ?? "",
-      score: a.score,
-      submitted_at: a.submitted_at
+      score: Number(a.dataValues.score),
+      submitted_at: a.dataValues.submitted_at
     };
-
-    return row;
 
   });
 
   return leaderboardData;
+
+};
+const getTopStudents = async () => {
+
+  const students = await leaderboardRepo.getTopStudents();
+
+  let rank = 1;
+
+  return students.map(s => ({
+    rank: rank++,
+    student_name: s.Student.name,
+    total_score: Number(s.dataValues.total_score),
+    total_attempts: Number(s.dataValues.total_attempts)
+  }));
+
 };
 export default {
   registerStudent,
@@ -539,5 +552,6 @@ export default {
   updateStudent,
   deleteStudent,
   getAttemptHistory,
-  leaderboard
+  leaderboard,
+  getTopStudents
 };

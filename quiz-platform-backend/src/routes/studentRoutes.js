@@ -17,4 +17,5 @@ router.put("/admin/student/:id",authMiddleware, studentController.updateStudent)
 router.delete("/admin/student/:id",authMiddleware, studentController.deleteStudent);
 router.get("/attempt-history", authMiddleware, studentController.getAttemptHistory);
 router.get("/quiz/:quizId/leaderboard", studentController.leaderboard);
+router.get("/dashboard/top-students", studentController.getTopStudents);
 export default router;
