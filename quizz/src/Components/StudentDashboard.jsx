@@ -2,7 +2,7 @@ import axios from "axios";
 import { useCallback, useEffect, useState } from "react";
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:9000/";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "/";
 const api = axios.create({ baseURL: API_BASE });
 api.interceptors.request.use((cfg) => {
   const token = localStorage.getItem("token");

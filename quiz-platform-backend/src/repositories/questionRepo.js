@@ -14,8 +14,12 @@ const getQuestions = async (quizId) => {
   });
 
 };
+const createQuestionsBulk = async (dataArray, transaction = null) => {
+  return await models.Question.bulkCreate(dataArray, { transaction });
+};
 
 export default {
   createQuestion,
-  getQuestions
+  getQuestions,
+  createQuestionsBulk
 };

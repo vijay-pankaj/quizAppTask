@@ -210,9 +210,6 @@ export default function StartTest() {
              <span className={`px-4 py-1 rounded-full text-xs font-bold ${t.accentLight} ${t.accentText} border ${t.accentBorder}`}>
                Question {currentIndex + 1}
              </span>
-             <span className={`text-xs font-bold ${t.textMuted}`}>
-               Marking: +4 | -1
-             </span>
           </div>
 
           <div className={`${t.bgCard} border ${t.border} rounded-3xl p-8 shadow-xl shadow-slate-200/50 mb-6 min-h-[200px] flex items-center`}>
