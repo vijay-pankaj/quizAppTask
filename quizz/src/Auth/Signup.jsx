@@ -14,7 +14,6 @@ const Signup = () => {
     password: ""
   });
   const navigate=useNavigate();
-
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) =>
@@ -31,7 +30,7 @@ const Signup = () => {
       }
 
       const res = await axios.post(
-        "http://localhost:9000/api/student/register",
+        "http://13.234.89.132:9000/api/student/register",
         form
       );
 

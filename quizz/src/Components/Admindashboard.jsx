@@ -359,7 +359,7 @@ export default function AdminDashboard() {
         {/* ── Welcome ── */}
         <div className="mb-8 fade-in">
           <h2 className={`text-2xl font-black ${t.text} mb-1`}>
-            {greeting()}, <span style={{ color: "#6366f1" }}>Admin</span> 👋
+            {greeting()}, <span style={{ color: "#6366f1" }}>SuperAdmin</span> 👋
           </h2>
           <p className={`${t.textMuted} text-sm`}>
             Here's what's happening with your quiz platform today.
