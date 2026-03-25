@@ -5,7 +5,7 @@ import leaderboardRepo from "../repositories/leaderboardRepo.js";
 import studentRepo from "../repositories/studentRepo.js";
 import userRepo from "../repositories/userRepo.js";
 
-import sendEmail from "../utils/mailer.js";
+// import sendEmail from "../utils/mailer.js";
 const normalize = (val) => {
   if (!val) return null;
   if (val.length === 1) return `option_${val.toLowerCase()}`; // "B" → "option_b"
@@ -47,53 +47,53 @@ const registerStudent = async (data) => {
       },
       transaction,
     );
-   await sendEmail(
-  student.email,
-  "Welcome to Quiz Platform",
-  `
-  <div style="font-family: Arial, sans-serif; background:#f4f6f8; padding:30px;">
-    <div style="max-width:600px; margin:auto; background:#ffffff; border-radius:8px; padding:30px;">
+//    await sendEmail(
+//   student.email,
+//   "Welcome to Quiz Platform",
+//   `
+//   <div style="font-family: Arial, sans-serif; background:#f4f6f8; padding:30px;">
+//     <div style="max-width:600px; margin:auto; background:#ffffff; border-radius:8px; padding:30px;">
 
-      <h2 style="color:#2c3e50;">Welcome to Quiz Platform 🎉</h2>
+//       <h2 style="color:#2c3e50;">Welcome to Quiz Platform 🎉</h2>
 
-      <p style="font-size:16px; color:#555;">
-        Hello <strong>${student.name}</strong>,
-      </p>
+//       <p style="font-size:16px; color:#555;">
+//         Hello <strong>${student.name}</strong>,
+//       </p>
 
-      <p style="font-size:15px; color:#555;">
-        Your student account has been successfully created.  
-        You can now log in and start attempting quizzes assigned to you.
-      </p>
+//       <p style="font-size:15px; color:#555;">
+//         Your student account has been successfully created.  
+//         You can now log in and start attempting quizzes assigned to you.
+//       </p>
 
-      <div style="background:#f1f3f5; padding:15px; border-radius:6px; margin:20px 0;">
-        <p style="margin:0; font-size:15px;"><strong>Email:</strong> ${student.email}</p>
-      </div>
+//       <div style="background:#f1f3f5; padding:15px; border-radius:6px; margin:20px 0;">
+//         <p style="margin:0; font-size:15px;"><strong>Email:</strong> ${student.email}</p>
+//       </div>
 
-      <p style="font-size:15px; color:#555;">
-        Click the button below to start your learning journey.
-      </p>
+//       <p style="font-size:15px; color:#555;">
+//         Click the button below to start your learning journey.
+//       </p>
 
-      <div style="text-align:center; margin:25px 0;">
-        <a href="http://localhost:3000/login"
-           style="background:#3498db; color:white; padding:12px 25px; text-decoration:none; border-radius:5px; font-size:15px;">
-           Login to Platform
-        </a>
-      </div>
+//       <div style="text-align:center; margin:25px 0;">
+//         <a href="http://localhost:3000/login"
+//            style="background:#3498db; color:white; padding:12px 25px; text-decoration:none; border-radius:5px; font-size:15px;">
+//            Login to Platform
+//         </a>
+//       </div>
 
-      <p style="font-size:14px; color:#888;">
-        Best of luck with your quizzes!
-      </p>
+//       <p style="font-size:14px; color:#888;">
+//         Best of luck with your quizzes!
+//       </p>
 
-      <hr style="margin:25px 0;">
+//       <hr style="margin:25px 0;">
 
-      <p style="font-size:13px; color:#999;">
-        Quiz Platform Team
-      </p>
+//       <p style="font-size:13px; color:#999;">
+//         Quiz Platform Team
+//       </p>
 
-    </div>
-  </div>
-  `
-);
+//     </div>
+//   </div>
+//   `
+// );
     await transaction.commit();
     return student;
   } catch (error) {
@@ -226,65 +226,65 @@ const quiz = await models.Quiz.findByPk(attempt.quiz_id);
 console.log(student);
 console.log(quiz);
 
-await sendEmail(
-  student.email,
-  "Quiz Submitted Successfully - Result",
-  `
-  <div style="font-family:Arial,Helvetica,sans-serif;background:#f4f6f8;padding:30px">
-    <div style="max-width:600px;margin:auto;background:#ffffff;border-radius:10px;overflow:hidden">
+// await sendEmail(
+//   student.email,
+//   "Quiz Submitted Successfully - Result",
+//   `
+//   <div style="font-family:Arial,Helvetica,sans-serif;background:#f4f6f8;padding:30px">
+//     <div style="max-width:600px;margin:auto;background:#ffffff;border-radius:10px;overflow:hidden">
 
-      <div style="background:#16a34a;color:white;padding:20px;text-align:center">
-        <h2>✅ Quiz Submitted Successfully</h2>
-      </div>
+//       <div style="background:#16a34a;color:white;padding:20px;text-align:center">
+//         <h2>✅ Quiz Submitted Successfully</h2>
+//       </div>
 
-      <div style="padding:25px;color:#333">
+//       <div style="padding:25px;color:#333">
 
-        <h3>Hello ${student.name},</h3>
+//         <h3>Hello ${student.name},</h3>
 
-        <p>You have successfully submitted your quiz.</p>
+//         <p>You have successfully submitted your quiz.</p>
 
-        <table style="width:100%;border-collapse:collapse;margin-top:20px">
+//         <table style="width:100%;border-collapse:collapse;margin-top:20px">
 
-          <tr>
-            <td style="padding:10px;border-bottom:1px solid #ddd"><b>Quiz Title</b></td>
-            <td style="padding:10px;border-bottom:1px solid #ddd">${quiz.title}</td>
-          </tr>
+//           <tr>
+//             <td style="padding:10px;border-bottom:1px solid #ddd"><b>Quiz Title</b></td>
+//             <td style="padding:10px;border-bottom:1px solid #ddd">${quiz.title}</td>
+//           </tr>
 
-          <tr>
-            <td style="padding:10px;border-bottom:1px solid #ddd"><b>Score</b></td>
-            <td style="padding:10px;border-bottom:1px solid #ddd">${score}</td>
-          </tr>
+//           <tr>
+//             <td style="padding:10px;border-bottom:1px solid #ddd"><b>Score</b></td>
+//             <td style="padding:10px;border-bottom:1px solid #ddd">${score}</td>
+//           </tr>
 
-          <tr>
-            <td style="padding:10px;border-bottom:1px solid #ddd"><b>Total Questions</b></td>
-            <td style="padding:10px;border-bottom:1px solid #ddd">${totalQuestions}</td>
-          </tr>
+//           <tr>
+//             <td style="padding:10px;border-bottom:1px solid #ddd"><b>Total Questions</b></td>
+//             <td style="padding:10px;border-bottom:1px solid #ddd">${totalQuestions}</td>
+//           </tr>
 
-          <tr>
-            <td style="padding:10px"><b>Percentage</b></td>
-            <td style="padding:10px">${percentage}%</td>
-          </tr>
+//           <tr>
+//             <td style="padding:10px"><b>Percentage</b></td>
+//             <td style="padding:10px">${percentage}%</td>
+//           </tr>
 
-        </table>
+//         </table>
 
-        <div style="text-align:center;margin-top:25px">
-          <a href="http://localhost:5173"
-             style="background:#16a34a;color:white;padding:12px 20px;
-             text-decoration:none;border-radius:6px;font-weight:bold">
-             View Dashboard
-          </a>
-        </div>
+//         <div style="text-align:center;margin-top:25px">
+//           <a href="http://localhost:5173"
+//              style="background:#16a34a;color:white;padding:12px 20px;
+//              text-decoration:none;border-radius:6px;font-weight:bold">
+//              View Dashboard
+//           </a>
+//         </div>
 
-      </div>
+//       </div>
 
-      <div style="background:#f1f1f1;padding:15px;text-align:center;font-size:12px;color:#555">
-        Quiz Platform © 2026
-      </div>
+//       <div style="background:#f1f1f1;padding:15px;text-align:center;font-size:12px;color:#555">
+//         Quiz Platform © 2026
+//       </div>
 
-    </div>
-  </div>
-  `
-);
+//     </div>
+//   </div>
+//   `
+// );
     await transaction.commit();
 
     return {

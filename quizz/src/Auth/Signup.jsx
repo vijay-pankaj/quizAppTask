@@ -30,7 +30,7 @@ const Signup = () => {
       }
 
       const res = await axios.post(
-        "http://13.234.89.132:9000/api/student/register",
+        "http://3.7.176.131:9000/api/student/register",
         form
       );
 
