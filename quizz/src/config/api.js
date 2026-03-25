@@ -1,1 +1,1 @@
-export const API_BASE_URL ="http://3.7.176.131:9000";
+export const API_BASE_URL ="http://localhost:9000";

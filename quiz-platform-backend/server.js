@@ -9,14 +9,14 @@ dotenv.config();
 
 const app = express()
 
-const corsOptions = {
-  origin: 'http://quiz-frontend-aws.s3-website.ap-south-1.amazonaws.com',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-};
+// const corsOptions = {
+//   origin: 'http://quiz-frontend-aws.s3-website.ap-south-1.amazonaws.com',
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+//   allowedHeaders: ['Content-Type', 'Authorization'],
+//   credentials: true
+// };
 
-app.use(cors(corsOptions));
+app.use(cors());
 app.use(express.json())
 
 app.get("/", (req, res) => {
@@ -30,6 +30,6 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/client", clientRoutes);
 app.use("/api/student", studentRoutes);
 
-app.listen(9000, '0.0.0.0', () => {
+app.listen(9000, () => {
     console.log(`Server is live on all interfaces at port ${PORT}`);
 });

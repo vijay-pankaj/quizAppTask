@@ -119,7 +119,6 @@ const updateClient = async (clientId, data) => {
       { transaction }
     );
 
-    // update user table
     await user.update(
       {
         name: data.name,
